@@ -1,1 +1,7 @@
 .DS_Store
+spikit/__pycache__/__init__.cpython-39.pyc
+spikit/__pycache__/units.cpython-39.pyc
+spikit/__pycache__/binary.cpython-39.pyc
+.gitignore
+spikit/__pycache__/accretion.cpython-39.pyc
+spikit/__pycache__/spike.cpython-39.pyc
