@@ -1,6 +1,8 @@
-from spikekit.units import *
+from spikit.units import *
 import numpy as np
 
+# ============================
+# ======== Black Hole ========
 class black_hole:
     """ A black hole with mass m [Msun]. """
     
@@ -21,19 +23,22 @@ class black_hole:
     def Risco(self) -> float:
         """ The innermost stable circular orbit (ISCO) radius [pc] of the black hole. """
         return 6 *self.Rm # [pc]
-    
+
+# ========================
+# ======== Binary ========
 class binary:
     """ A binary of two black holes at a separation r2 at the largests ISCO radius. """
     
-    def __init__(self, m1: black_hole, m2: black_hole, r2: float):
+    def __init__(self, m1: black_hole, m2: black_hole, a: float, e: float = 0):
         
         if m1.m < m2.m: raise ValueError("m1 must be greater than m2.")
-        if r2 < 1: raise ValueError("r2 must be greater than 1.")
+        if a < m1.Risco : raise ValueError("a must be greater than the ISCO radius.")
         
         self._M1 = m1 # Largest black hole object.
         self._M2 = m2 # Smallest black hole object.
         
-        self.r2 = r2 *self._M1.Risco # [pc]
+        self.a = a # Semi-major axis [pc]
+        self.e = e # Eccentricity.
     
     @property
     def m1(self) -> float:
@@ -65,24 +70,30 @@ class binary:
         """ The innermost stable circular orbit (ISCO) radius [pc] of the binary. """
         return self._M1.Risco # [pc]
     
-    @property
-    def rhill(self, r2: float = None) -> float:
-        """" The Hill radius [pc] of the binary at its current separation, or at a given separation r2 [pc]. """
-        if r2 is None: r2 = self.r2
+    def rhill(self, r2: float) -> float:
+        """" The Hill radius [pc] of the binary at a given separation r2 [pc]. """
         
-        return self.r2 *(self.q/3)**(1/3) # [pc]
+        return r2 *(self.q/3)**(1/3) # [pc]
     
     # ======== Orbital Properties ========
-    @property
-    def Vmax(self, r2: float = None) -> float:
-        """ The maximum orbital velocity [m/s] of the binary at its current separation, or at a given separation r2 [pc]. """
-        if r2 is None: r2 = self.r2
-        
-        return np.sqrt(2 *G *self.m *Mo /(self.r2 *pc)) # [m/s]
     
-    @property
-    def uorb(self, r2: float = None) -> float:
-        """ The orbital velocity [m/s] of the binary at its current position, or at a given separation r2 [pc]. """
-        if r2 is None: r2 = self.r2
+    def p(self, a: float, e: float):
+        return a *(1 -e**2) # [pc]
+    
+    def r2(self, a: float = None, e = 0, theta: float = 0) -> float:
+        """ The separation [pc] of the binary at a given semi-major axis a [pc]. """
         
-        return np.sqrt(G *self.m *Mo /(self.r2 *pc)) # [m/s]
+        if a is None: a = self.a
+        
+        return self.p(a, e) /(1 +e *np.cos(theta)) # [pc]
+    
+    def Vmax(self, r: float) -> float:
+        """ The maximum orbital velocity [m/s] around the larger black hole at a given radius r [pc]. """
+        
+        return np.sqrt(2 *G *self.m1 *Mo /(r *pc)) # [m/s]
+    
+    def u(self, r2: float, a: float) -> float:
+        """ The orbital velocity [m/s] of the binary at a given separation r2 [pc]
+        and semi-major axis a [pc]."""
+        
+        return np.sqrt(G *self.m *Mo *(2/r2 -1/a)/pc) # [m/s]
