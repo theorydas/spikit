@@ -5,3 +5,7 @@ spikit/__pycache__/binary.cpython-39.pyc
 .gitignore
 spikit/__pycache__/accretion.cpython-39.pyc
 spikit/__pycache__/spike.cpython-39.pyc
+test.ipynb
+.vscode/settings.json
+spikekit.code-workspace
+spikit/tests/__pycache__/test_binary.cpython-39-pytest-7.1.2.pyc
