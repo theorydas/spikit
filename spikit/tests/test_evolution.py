@@ -1,8 +1,4 @@
 from spikit.binary import black_hole, binary
-from spikit.units import pi
-
-# ============================
-# ======== Mass Tests ========
 
 def test_zero_evolution():
     m1 = black_hole(10); m2 = black_hole(5)

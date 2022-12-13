@@ -9,3 +9,10 @@ test.ipynb
 .vscode/settings.json
 spikekit.code-workspace
 spikit/tests/__pycache__/test_binary.cpython-39-pytest-7.1.2.pyc
+spikit/tests/__pycache__/test_evolution.cpython-39-pytest-7.1.2.pyc
+.gitignore
+spikit/tests/__pycache__/test_binary copy.cpython-39-pytest-7.1.2.pyc
+.gitignore
+spikit/tests/__pycache__/__init__.cpython-39.pyc
+spikit/tests/__pycache__/test_accretion.cpython-39-pytest-7.1.2.pyc
+spikit/tests/__pycache__/test_evolution copy.cpython-39-pytest-7.1.2.pyc
