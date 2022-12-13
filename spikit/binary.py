@@ -27,7 +27,7 @@ class black_hole:
 # ========================
 # ======== Binary ========
 class binary:
-    """ A binary of two black holes at a separation r2 at the largests ISCO radius. """
+    """ A binary of two black holes at a separation r2 [pc] """
     
     def __init__(self, m1: black_hole, m2: black_hole, a: float, e: float = 0):
         
@@ -77,13 +77,12 @@ class binary:
     
     # ======== Orbital Properties ========
     
-    def p(self, a: float, e: float):
+    def p(self, a: float, e: float) -> float:
+        """ The semi-latus rectum [pc] of the binary. """
         return a *(1 -e**2) # [pc]
     
     def r2(self, a: float = None, e = 0, theta: float = 0) -> float:
         """ The separation [pc] of the binary at a given semi-major axis a [pc]. """
-        
-        if a is None: a = self.a
         
         return self.p(a, e) /(1 +e *np.cos(theta)) # [pc]
     
@@ -92,8 +91,48 @@ class binary:
         
         return np.sqrt(2 *G *self.m1 *Mo /(r *pc)) # [m/s]
     
-    def u(self, r2: float, a: float) -> float:
+    def u(self, r2: float, a: float = None) -> float:
         """ The orbital velocity [m/s] of the binary at a given separation r2 [pc]
         and semi-major axis a [pc]."""
         
+        if a is None: a = r2 # [pc]
+        
         return np.sqrt(G *self.m *Mo *(2/r2 -1/a)/pc) # [m/s]
+    
+    def T(self, a: float) -> float:
+        """ The orbital period [s] of the binary at a given semi-major axis a [pc]. """
+        
+        return 2 *np.pi *np.sqrt((a *pc)**3 /(G *self.m *Mo)) # [s]
+    
+    def f(self, a: float) -> float:
+        """ The orbital frequency [Hz] of the binary at a given semi-major axis a [pc]. """
+        
+        return 1/self.T(a)
+    
+    # ======== Conservative Quantities ========
+    
+    def Eorb(self, a: float) -> float:
+        """ The (negative) orbital energy [J] of the binary at a given semi-major axis a [pc]. """
+        
+        return -G *self.m1 *self.m2 *Mo**2/(2 *a *pc) # [J]
+    
+    def Lorb(self, a: float, e: float = 0) -> float:
+        """ The orbital angular momentum [Js] of the binary at a given semi-major axis a [pc] and eccentricity e. """
+        
+        return self.mu *Mo *np.sqrt(G *self.m *Mo *self.p(a, e) *pc)
+    
+    # ======== Evolution ========
+    
+    def da_dt(self, dE_dt: float, dm2_dt: float, r: float, a: float) -> float:
+        """ The rate of change of the semi-major axis [pc/s] given a force F [N] acting
+        in the direction of its motion and a mass rate for the companion [Msun/s]. """
+        
+        return -a *( dE_dt/self.Eorb(a) + dm2_dt/self.m1 *(2 *a/r -1)) # [pc/s]
+    
+    def de_dt(self, dE_dt: float, dL_dt: float, dm2_dt: float, r: float, a: float, e: float) -> float:
+        """ The rate of change of the eccentricity [1/s] given a force F [N] acting
+        in the direction of its motion and a mass rate for the companion [Msun/s]. """
+        
+        if e == 0: return 0
+        
+        return - (1 -e**2)/e *( dE_dt/2/self.Eorb(a) + dL_dt/self.Lorb(a, e) + dm2_dt/self.m1 *(a/r -1)) # [1/s]
