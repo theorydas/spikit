@@ -2,7 +2,25 @@ from spikit.spike import spike
 from spikit.binary import binary
 from spikit.units import c, pi, pc, Mo
 
-class accretion:
+class force:
+    """ The base class for all forces acting on the companion of a binary. """
+    
+    def __init__(self):
+        pass
+    
+    def dE_dt(self, r2: float, u: float):
+        """ Returns the rate of change of the orbital energy [J/s] due to the force. """
+        return self.F(r2, u) *u # [J/s]
+    
+    def dlnL_dt(self, r2: float, u: float):
+        """ Returns the rate of change of the log of the orbital angular momentum [log(J m/s)] due to the force."""
+        return self.F(r2, u) /(self._binary.mu *u) # [log(J m/s)]
+    
+    def dL_dt(self, r2: float, u: float, a: float, e: float):
+        """ Returns the rate of change of the orbital angular momentum [J m/s] due to the force."""
+        return self.dlnL_dt(r2, u) *self._binary.Lorb(a, e) # [J m/s]
+
+class accretion(force):
     """ Isotropic accretion. """
     
     def __init__(self, spike: spike, binary: binary, k: float = None):
