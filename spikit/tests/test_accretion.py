@@ -1,6 +1,6 @@
 from spikit.binary import black_hole, binary
 from spikit.spike import static_powerlaw
-from spikit.accretion import accretion
+from spikit.forces import accretion
 
 def test_csection():
     m1 = black_hole(1000); m2 = black_hole(5)
