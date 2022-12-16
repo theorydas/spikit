@@ -3,7 +3,7 @@ import numpy as np
 
 # ============================
 # ======== Black Hole ========
-class black_hole:
+class BlackHole:
     """ A black hole with mass m [Msun]. """
     
     def __init__(self, m: float):
@@ -26,10 +26,10 @@ class black_hole:
 
 # ========================
 # ======== Binary ========
-class binary:
+class Binary:
     """ A binary of two black holes at a separation r2 [pc] """
     
-    def __init__(self, m1: black_hole, m2: black_hole, a: float, e: float = 0):
+    def __init__(self, m1: BlackHole, m2: BlackHole, a: float, e: float = 0):
         
         if m1.m < m2.m: raise ValueError("m1 must be greater than m2.")
         if a < m1.Risco : raise ValueError("a must be greater than the ISCO radius.")

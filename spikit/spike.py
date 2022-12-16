@@ -1,16 +1,16 @@
-from spikit.binary import black_hole
+from spikit.binary import BlackHole
 from scipy.special import gamma, hyp2f1
 import numpy as np
 
-class spike:
+class Spike:
     """ The default spike class. """
     def __init__(self) -> None:
         pass
 
-class static_powerlaw(spike):
+class StaticPowerLaw(Spike):
     """ An isotropic, power-law spike with a power-law index gammasp. """
     
-    def __init__(self, seed: black_hole, gammasp: float, rho6: float = 0):
+    def __init__(self, seed: BlackHole, gammasp: float, rho6: float = 0):
         self.gammasp = gammasp # Power-law index of the spike.
         self.rho6 = rho6
         self.seed = seed
