@@ -149,3 +149,37 @@ class DynamicalFrictionIso(DynamicalFriction):
         xi_0l = self._spike.xi_Nl(0, chi)
         
         return xi_0l
+
+# ====================
+
+class GravitationalWaves():
+    def __init__(self, binary: Binary):
+        self._binary = binary
+    
+    def dEdt(self, a: float, e: float) -> float:
+        """ Calculate the orbit averaged energy loss due to gravitational wave emission of an
+        orbit with eccentricity e and semi major axis a per Eq. 15 of 2112.09586v1.
+        
+        * a the semi major axis in pc.
+        """
+        m = self._binary.m # [Msun]
+        mu = self._binary.mu # [Msun]
+        
+        dEdt = 32/5 *mu**2 *m**3/(a *pc)**5 *G**4 / c**5 *Mo**5
+        dEdt *= (1 +73/24 *e**2 +37/96 *e**4) *(1 -e**2)**(-7/2) # Weight because of non-zero eccentricity.
+        
+        return dEdt
+
+    def dLdt(self, a: float, e: float) -> float:
+        """ Calculate the orbit averaged angular momentum loss due to gravitational wave emission of an
+        orbit with eccentricity e and semi major axis a per Eq. 16 of 2112.09586v1.
+        
+        * a the semi major axis in pc.
+        """
+        m = self._binary.m # [Msun]
+        mu = self._binary.mu # [Msun]
+        
+        dLdt = 32/5 *(mu *Mo)**2 *(m *Mo)**(5/2)/(a *pc)**(7/2) *G**(7/2) / c**5
+        dLdt *= (1 +7/8*e**2) /(1 -e**2)**2 # Weight because of non-zero eccentricity.
+        
+        return dLdt
