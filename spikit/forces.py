@@ -1,12 +1,16 @@
 from spikit.spike import spike
 from spikit.binary import binary
-from spikit.units import c, pi, pc, Mo
+from spikit.units import c, pi, pc, Mo, G
+from numpy import log
 
 class force:
     """ The base class for all forces acting on the companion of a binary. """
     
     def __init__(self):
         pass
+    
+    def F(self):
+         pass
     
     def dE_dt(self, r2: float, u: float):
         """ Returns the rate of change of the orbital energy [J/s] due to the force. """
@@ -21,11 +25,11 @@ class force:
         return self.dlnL_dt(r2, u) *self._binary.Lorb(a, e) # [J m/s]
 
 class accretion(force):
-    """ Isotropic accretion. """
+    """ The isotropic accretion force. """
     
-    def __init__(self, spike: spike, binary: binary, k: float = None):
-        self._spike = spike
+    def __init__(self, binary: binary, spike: spike, k: float = None):
         self._binary = binary
+        self._spike = spike
         
         self._k = k # The ratio of the body's Swartzchild radius to its physical size.
     
@@ -47,13 +51,13 @@ class accretion(force):
     
     # ====================
     def dm2_dt0(self, r2: float, u: float):
-        """ Returns the mass accretion rate [Msun/yr] due to the spike. """
+        """ Returns the mass accretion rate [Msun/yr] due to a 'frozen' spike. """
         rho_DM = self._spike.rho(r2)/pc**3 # [Msun/m3]
         
         return rho_DM *self.csection(u) *u # [Msun/s]
     
     def F0(self, r2: float, u: float):
-        """ Returns the accretion darg-force [N] due to the spike. """
+        """ Returns the accretion darg-force [N] due to a 'frozen' spike. """
         
         return self.dm2_dt0(r2, u)/Mo *u # [N]
         
@@ -95,3 +99,48 @@ class accretion(force):
         xi_4l = self._spike.xi_Nl(4, chi)
         
         return xi_0l +( xi_n1u *(10 *k + 4 *beta**2) +20 *beta**2 *xi_1u + xi_2l *(10 *beta**2 -5 *k) - beta**2 *xi_4l)/(beta**2 +k)/15
+
+class dfriction(force):
+    """ The isotropic dynamical friction force. """
+    
+    def __init__(self, binary: binary, spike: spike):
+        self._binary = binary
+        self._spike = spike
+    
+    def b_90(self, r2: float, u: float):
+        """ Returns the impact parameter [m] for which a particle is deflected by 90 degrees. """
+        
+        return G *self._binary.m2 *Mo/u**2 # [m]
+    
+    def b_eff(self, r2: float, u: float):
+        """ Returns the maximum impact parameter [m] for which dynamical friction is effective. """
+        
+        return self._binary.rhill(r2) *pc # [m]
+    
+    def lnL(self, r2: float, u: float):
+        """ Returns the standard Coulomb logarithm for the dynamical friction force. """
+        b_eff = self.b_eff(r2, u) # [m] The effective impact parameter of the force.
+        b_90 = self.b_90(r2, u) # [m]
+        
+        return log(1 +b_eff**2/b_90**2)
+    
+    def F0(self, r2: float, u: float):
+        """ Returns the dynamical friction force [N] due to a 'frozen' spike. """
+        
+        rho_DM = self._spike.rho(r2)/pc**3 # [Msun/m3]
+        lnL = self.lnL(r2, u)
+        
+        return 4 *pi *G**2 *(self._binary.m2 *Mo)**2 *lnL *(rho_DM *Mo/pc**3)/u**2 # [N]
+    
+    def F(self, r2: float, u: float):
+        """ Returns the dynamical friction force [N] due to a spike. """
+        
+        return self.F0(r2, u) *self.xi_DF(r2, u) # [N]
+    
+    def xi_DF(self, r2: float, u: float) -> float:
+        """ Returns the boost to the dynamical friction force due to the spike. """
+        
+        chi = u/self._binary.Vmax(r2)
+        xi_0l = self._spike.xi_Nl(0, chi)
+        
+        return xi_0l

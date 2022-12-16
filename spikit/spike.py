@@ -19,7 +19,7 @@ class static_powerlaw(spike):
         self.A_f = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
 
     def rho(self, r: float) -> float:
-        return self.rho6 *(r/1e-6)**-self.gammasp
+        return self.rho6 *(r/1e-6)**-self.gammasp # [Msun/pc3]
     
     def xi_Nl(self, N: float, chi: float) -> float:
         """ Returns the lower, normalized velocity moment (v/u)^N for particles with v < u.
