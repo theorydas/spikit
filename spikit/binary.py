@@ -29,16 +29,12 @@ class BlackHole:
 class Binary:
     """ A binary of two black holes at a separation r2 [pc] """
     
-    def __init__(self, m1: BlackHole, m2: BlackHole, a: float, e: float = 0):
+    def __init__(self, M1: BlackHole, M2: BlackHole):
         
-        if m1.m < m2.m: raise ValueError("m1 must be greater than m2.")
-        if a < m1.Risco : raise ValueError("a must be greater than the ISCO radius.")
+        if M1.m < M2.m: raise ValueError("m1 must be greater than m2.")
         
-        self._M1 = m1 # Largest black hole object.
-        self._M2 = m2 # Smallest black hole object.
-        
-        self.a = a # Semi-major axis [pc]
-        self.e = e # Eccentricity.
+        self._M1 = M1 # Largest black hole object.
+        self._M2 = M2 # Smallest black hole object.
     
     @property
     def m1(self) -> float:
