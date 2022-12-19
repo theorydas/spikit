@@ -1,5 +1,5 @@
 from spikit.units import *
-import numpy as np
+from numpy import sqrt, cos
 
 # ============================
 # ======== Black Hole ========
@@ -80,12 +80,12 @@ class Binary:
     def r2(self, a: float = None, e = 0, theta: float = 0) -> float:
         """ The separation [pc] of the binary at a given semi-major axis a [pc]. """
         
-        return self.p(a, e) /(1 +e *np.cos(theta)) # [pc]
+        return self.p(a, e) /(1 +e *cos(theta)) # [pc]
     
     def Vmax(self, r: float) -> float:
         """ The maximum orbital velocity [m/s] around the larger black hole at a given radius r [pc]. """
         
-        return np.sqrt(2 *G *self.m1 *Mo /(r *pc)) # [m/s]
+        return sqrt(2 *G *self.m1 *Mo /(r *pc)) # [m/s]
     
     def u(self, r2: float, a: float = None) -> float:
         """ The orbital velocity [m/s] of the binary at a given separation r2 [pc]
@@ -93,12 +93,12 @@ class Binary:
         
         if a is None: a = r2 # [pc]
         
-        return np.sqrt(G *self.m *Mo *(2/r2 -1/a)/pc) # [m/s]
+        return sqrt(G *self.m *Mo *(2/r2 -1/a)/pc) # [m/s]
     
     def T(self, a: float) -> float:
         """ The orbital period [s] of the binary at a given semi-major axis a [pc]. """
         
-        return 2 *np.pi *np.sqrt((a *pc)**3 /(G *self.m *Mo)) # [s]
+        return 2 *pi *sqrt((a *pc)**3 /(G *self.m *Mo)) # [s]
     
     def f(self, a: float) -> float:
         """ The orbital frequency [Hz] of the binary at a given semi-major axis a [pc]. """
