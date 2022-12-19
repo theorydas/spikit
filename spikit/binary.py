@@ -53,6 +53,13 @@ class Binary:
         
         return self.m1 *self.m2/(self.m1 +self.m2) # [Msun]
     
+    def Mchirp(self, m1: float = None, m2: float = None) -> float:
+        """ The chirp mass [Msun] of the binary. """
+        if m1 is None: m1 = self.m1
+        if m2 is None: m2 = self.m2
+        
+        return (m1 *m2)**(3/5) / (m1 +m2)**(1/5) # [Msun]
+    
     def q(self, m1: float = None, m2: float = None) -> float:
         """" The mass ratio of the binary. """
         if m1 is None: m1 = self.m1
