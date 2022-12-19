@@ -115,7 +115,21 @@ class Binary:
     def Lorb(self, a: float, e: float = 0) -> float:
         """ The orbital angular momentum [Js] of the binary at a given semi-major axis a [pc] and eccentricity e. """
         
-        return self.mu *Mo *np.sqrt(G *self.m *Mo *self.p(a, e) *pc)
+        return self.mu *Mo *sqrt(G *self.m *Mo *self.p(a, e) *pc)
+    
+    def a(self, Eorb: float) -> float:
+        """ The semi-major axis [pc] of the binary at a given orbital energy Eorb [J]. """
+        
+        return -G *self.m1 *self.m2 *Mo**2/(2 *Eorb) /pc # [pc]
+    
+    def e(self, Eorb: float, Lorb: float) -> float:
+        mu = self.mu # [Msun]
+        m = self.m # [Msun]
+        
+        a = self.a(Eorb) # [pc]
+        p = (Lorb/mu/Mo)**2 / (G *m *Mo) /pc # [pc]
+        
+        return sqrt(1 -p/a)
     
     # ======== Evolution ========
     
