@@ -10,10 +10,9 @@ class Spike:
 class StaticPowerLaw(Spike):
     """ An isotropic, power-law spike with a power-law index gammasp. """
     
-    def __init__(self, seed: BlackHole, gammasp: float, rho6: float = 0):
+    def __init__(self, gammasp: float, rho6: float = 0):
         self.gammasp = gammasp # Power-law index of the spike.
         self.rho6 = rho6
-        self.seed = seed
         
         #  The normalization of the power law distribution function.
         self.A_f = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)

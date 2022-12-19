@@ -5,8 +5,7 @@ import pytest
 
 @pytest.fixture
 def default_binary_spike_system():
-    m1 = BlackHole(1e3); m2 = BlackHole(1)
-    system = Binary(m1, m2)
-    spike = StaticPowerLaw(m1, 7/3, 1e16)
+    system = Binary(1e3, 1)
+    spike = StaticPowerLaw(7/3, 1e16)
     
     return (system, spike)
