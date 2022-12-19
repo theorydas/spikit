@@ -1,7 +1,7 @@
 from spikit.binary import BlackHole, Binary
 from spikit.units import pi
 
-from spikit.tests.fixtures import default_binary_spike_system
+from spikit.tests.fixtures import default_binary
 from pytest import approx
 from numpy import array
 
@@ -34,19 +34,19 @@ def test_calculate_mass_ratio():
 # =============================
 # ======== Orbit Tests ========
     
-def test_calculate_semiliatus_rectum(default_binary_spike_system):
-    system, _ = default_binary_spike_system
+def test_calculate_semiliatus_rectum(default_binary: Binary):
+    system = default_binary
     
     assert system.p(a = 1e4, e = 0.5) == 7500
 
-def test_calculate_separation(default_binary_spike_system):
-    system, _ = default_binary_spike_system
+def test_calculate_separation(default_binary: Binary):
+    system = default_binary
     
     assert system.r2(a = 100, e = 0.45, theta = 0) == 55
     assert system.r2(a = 100, e = 0.45, theta = pi) == 145
 
-def test_cycle_sma(default_binary_spike_system):
-    system, _ = default_binary_spike_system
+def test_cycle_sma(default_binary: Binary):
+    system = default_binary
     
     a = 10
     
@@ -56,8 +56,8 @@ def test_cycle_sma(default_binary_spike_system):
     
     assert a == a_
 
-def test_cycle_eccentricity(default_binary_spike_system):
-    system, _ = default_binary_spike_system
+def test_cycle_eccentricity(default_binary: Binary):
+    system = default_binary
     
     a = 10
     e = 0.1
