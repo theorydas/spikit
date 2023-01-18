@@ -39,10 +39,12 @@ class Force(ABC):
 class Accretion(Force):
     """ The base accretion force. """
     
-    def __init__(self, binary: Binary, spike: Spike, k: float = None):    
+    def __init__(self, binary: Binary, spike: Spike, k: float = None):
+        if k == 0: raise ValueError("The parameter 'k' cannot be zero i.e. size of the object cannot be infinite.")
+         
         self._binary = binary
         self._spike = spike
-            
+        
         self._k = k # The ratio of the body's Swartzchild radius to its physical size.
     
     def csection(self, u: float, m2: float = None) -> float:
@@ -148,7 +150,7 @@ class AccretionIso(Accretion):
         
         if m1 is None: m1 = self._binary.m1 # [Msun]
         
-        k = self._k or 1 # TODO: Can I extrapolate this on other ... is None  ifs?
+        k = self._k or 1
         chi = u/self._binary.Vmax(r2, m1)
         beta = u/c
         
