@@ -111,10 +111,11 @@ class Binary:
         
         return 2 *pi *sqrt((a *pc)**3 /(G *m *Mo)) # [s]
     
-    def f(self, a: float) -> float:
+    def f(self, a: float, m: float = None) -> float:
         """ The orbital frequency [Hz] of the binary at a given semi-major axis a [pc]. """
+        if m is None: m = self.m()
         
-        return 1/self.T(a)
+        return 1/self.T(a, m)
     
     # ======== Conservative Quantities ========
     
