@@ -39,12 +39,10 @@ class Force(ABC):
 class Accretion(Force):
     """ The base accretion force. """
     
-    def __init__(self, *args, k: float = None):
+    def __init__(self, spike: Spike, k: float = None):
         if k == 0: raise ValueError("The parameter 'k' cannot be zero i.e. size of the object cannot be infinite.")
-         
-        # self._binary = spike.binary
-        # self._spike = spike
-        super().__init__(*args)
+        
+        super().__init__(spike)
         
         self._k = k # The ratio of the body's Swartzchild radius to its physical size.
     
@@ -202,7 +200,7 @@ class DynamicalFrictionIso(DynamicalFriction):
 
 # ====================
 
-class GravitationalWaves():
+class GravitationalWaves:
     def __init__(self, binary: Binary):
         self._binary = binary
     
@@ -241,7 +239,7 @@ class GravitationalWaves():
         return dLdt
     
     # ======== Vacuum Systems ========
-    
+    #TODO: Must include the effect of the binary's ISCO into the time and ditstance calculations.
     def vacuum_merger_distance(self, t: float, m1: float = None, m2: float = None) -> float:
         if m1 is None: m1 = self._binary.m1
         if m2 is None: m2 = self._binary.m2
