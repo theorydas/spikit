@@ -206,7 +206,7 @@ class GravitationalWaves():
     def __init__(self, binary: Binary):
         self._binary = binary
     
-    def dE_dt(self, a: float, e: float, m1: float = None, m2: float = None) -> float:
+    def dE_dt(self, a: float, u: float = 0, e: float = 0, m1: float = None, m2: float = None) -> float:
         """ Calculate the orbit averaged energy loss due to gravitational wave emission of an
         orbit with eccentricity e and semi major axis a per Eq. 15 of 2112.09586v1.
         
