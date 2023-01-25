@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from spikit.units import c, pi, pc, Mo, G
 from spikit.binary import Binary, BlackHole
 from spikit.spike import Spike
@@ -7,8 +7,8 @@ from numpy import log
 class Force(ABC):
     """ The base class for all forces acting on the companion of a binary. """
     
-    def __init__(self, binary: Binary, spike: Spike):
-        self._binary = binary
+    def __init__(self, spike: Spike):
+        self._binary = spike.binary
         self._spike = spike
     
     def dE_dt(self, r2: float, u: float, m1: float = None, m2: float = None) -> float:
@@ -39,11 +39,12 @@ class Force(ABC):
 class Accretion(Force):
     """ The base accretion force. """
     
-    def __init__(self, binary: Binary, spike: Spike, k: float = None):
+    def __init__(self, *args, k: float = None):
         if k == 0: raise ValueError("The parameter 'k' cannot be zero i.e. size of the object cannot be infinite.")
          
-        self._binary = binary
-        self._spike = spike
+        # self._binary = spike.binary
+        # self._spike = spike
+        super().__init__(*args)
         
         self._k = k # The ratio of the body's Swartzchild radius to its physical size.
     

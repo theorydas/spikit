@@ -1,8 +1,9 @@
-from spikit.binary import BlackHole
+from abc import ABC
+from spikit.binary import Binary
 from scipy.special import gamma, hyp2f1
 import numpy as np
 
-class Spike:
+class Spike(ABC):
     """ The default spike class. """
     def __init__(self) -> None:
         pass
@@ -10,7 +11,8 @@ class Spike:
 class StaticPowerLaw(Spike):
     """ An isotropic, power-law spike with a power-law index gammasp. """
     
-    def __init__(self, gammasp: float, rho6: float = 0):
+    def __init__(self, binary: Binary = None, gammasp: float = 7/3, rho6: float = 0):
+        self.binary = binary
         self.gammasp = gammasp # Power-law index of the spike.
         self.rho6 = rho6
         

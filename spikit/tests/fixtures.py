@@ -5,12 +5,13 @@ import pytest
 
 @pytest.fixture
 def default_binary() -> Binary:
-    system = Binary(1e3, 1)
+    binary = Binary(m1 = 1e3, m2 = 1)
     
-    return system
+    return binary
 
 @pytest.fixture
 def default_spike() -> Spike:
-    spike = StaticPowerLaw(7/3, 1e16)
+    binary = Binary(m1 = 1e3, m2 = 1)
+    spike = StaticPowerLaw(binary = binary, gammasp = 7/3, rho6 = 1e16)
     
     return spike
