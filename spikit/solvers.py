@@ -14,7 +14,7 @@ class StaticSolver():
         
         pass
     
-    def _update_2nd_order(self, a: float, t: float, h: float) -> tuple:
+    def _integrate_order_2(self, a: float, t: float, h: float) -> tuple:
         """ A modified, second order method for solving the static problem."""
         # First step
         r2 = a; u = self.binary.u(r2)
@@ -22,7 +22,7 @@ class StaticSolver():
         dEdt_1 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
         dadt_1 = self.binary.da_dt(dEdt_1, 0, r2, a) # [pc/s]
 
-        dt = abs(a/dadt_1) *h
+        dt = abs(a/dadt_1) *h # [s]
 
         a += 2/3 *dadt_1 *dt # [pc]
         # Second step
@@ -31,12 +31,26 @@ class StaticSolver():
         dEdt_2 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
         dadt_2 = self.binary.da_dt(dEdt_2, 0, r2, a) # [pc/s]
         
-        t += dt
-        a += dt/12 *(9 *dadt_2 -5 *dadt_1)
+        t += dt # [s]
+        a += dt/12 *(9 *dadt_2 -5 *dadt_1) # [pc]
         
         return a, t
     
-    def solve(self, a0: float, e0: float = 0, h: float = 1e-2):
+    def _integrate_order_1(self, a: float, t: float, h: float) -> tuple:
+        """ A 1st order solver."""
+        r2 = a; u = self.binary.u(r2)
+        
+        dEdt = -sum([loss.dE_dt(r2, u) for loss in self.losses])
+        dadt = self.binary.da_dt(dEdt, 0, r2, a) # [pc/s]
+
+        dt = abs(a/dadt) *h # [s]
+
+        a += dadt *dt # [pc]
+        t += dt # [s]
+        
+        return a, t
+    
+    def solve(self, a0: float, e0: float = 0, h: float = 1e-2, order: int = 2):
         """
         Solve the static problem. 
         a0 is the initial semi-major axis [pc], e0 the initial eccentricity,
@@ -45,18 +59,20 @@ class StaticSolver():
         # Raise an error if the initial conditions are not valid.
         if e0 < 0 or e0 >= 1: raise ValueError("The eccentricity must be between 0 and 1.")
         if a0 <= self.binary.Risco(): raise ValueError("The initial separation must be larger than the innermost stable circular orbit.")
+        if order not in [1, 2]: raise ValueError("The order must be 1 or 2.")
         
         # Setup binary and gravitational wave losses.
         risco = self.binary.Risco()
-
+        integrator = self._integrate_order_1 if order == 1 else self._integrate_order_2
+        
         # Evolve the binary.
         a_list = [a0]
         t_list = [0]
 
         while a_list[-1] > risco:
             a = a_list[-1]; t = t_list[-1]
-
-            a_, t_ = self._update_2nd_order(a, t, h = h)
+            
+            a_, t_ = integrator(a, t, h = h)
             a_list.append(a_); t_list.append(t_)
 
         t = np.array(t_list)
