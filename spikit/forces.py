@@ -264,27 +264,3 @@ class GravitationalWaves:
         dLdt *= (1 +7/8*e**2) /(1 -e**2)**2 # Weight because of non-zero eccentricity.
         
         return dLdt
-    
-    # ======== Vacuum Systems ========
-    #TODO: Must include the effect of the binary's ISCO into the time and ditstance calculations.
-    def vacuum_merger_distance(self, t: float, m1: float = None, m2: float = None) -> float:
-        if m1 is None: m1 = self._binary.m1
-        if m2 is None: m2 = self._binary.m2
-        
-        return (256 * G**3 *(m1 +m2) *m1 *m2 *Mo**3 / (5 *c**5) *t)**(1/4) /pc # [pc]
-    
-    def vacuum_merger_time(self, r: float, m1: float = None, m2: float = None) -> float:
-        if m1 is None: m1 = self._binary.m1
-        if m2 is None: m2 = self._binary.m2
-        
-        return (5 *c**5 *(r *pc)**4) / (256 * G**3 *(m1 +m2) *m1 *m2 *Mo**3) # [s]
-    
-    def vacuum_phase(self, fGW: float, m1: float = None, m2: float = None) -> float:
-        """ Calculates the phase related to a binary or gravitational wave signal."""
-        
-        if m1 is None: m1 = self._binary.m1
-        if m2 is None: m2 = self._binary.m2
-        
-        Mc = self._binary.Mchirp(m1, m2) # [Msun]
-        
-        return 1/16 *(c**3 / (pi *G *Mc *Mo *fGW))**(5/3)
