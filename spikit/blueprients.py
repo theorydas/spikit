@@ -1,4 +1,5 @@
 from spikit.units import G, c, Mo, pi, pc
+from spikit.binary import Binary
 
 from abc import ABC
 
@@ -24,7 +25,7 @@ class Blueprint(ABC):
         pass
 
 class VacuumMerger(Blueprint):
-    def __init__(self, binary):
+    def __init__(self, binary: Binary):
         self._binary = binary
     
     #TODO: Must include the effect of the binary's ISCO into the time and ditstance calculations.
