@@ -92,6 +92,6 @@ def test_zero_density_merger_time(default_binary: Binary):
     a0 = 100 *spike.binary.Risco() # [pc]
     
     t_df_merger = SpikeDFMerger(spike).t_to_c(a0)
-    t_df_merger = VacuumMerger(spike.binary).t_to_c(a0)
+    t_vacuum_merger = VacuumMerger(spike.binary).t_to_c(a0)
     
-    assert t_df_merger == t_df_merger
+    assert t_vacuum_merger == approx(t_df_merger, 1e-3)
