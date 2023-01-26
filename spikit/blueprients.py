@@ -31,22 +31,36 @@ class VacuumMerger(Blueprint):
     def __init__(self, binary: Binary):
         self._binary = binary
     
-    #TODO: Must include the effect of the binary's ISCO into the time and ditstance calculations.
     def r(self, t: float, m1: float = None, m2: float = None) -> float:
         """ Returns the distance between the two objects [m] at time t. """
         
         if m1 is None: m1 = self._binary.m1
         if m2 is None: m2 = self._binary.m2
         
-        return (256 * G**3 *(m1 +m2) *m1 *m2 *Mo**3 / (5 *c**5) *t)**(1/4) /pc # [pc]
+        m = m1 +m2 # [Msun]
+        
+        cGW = 64 *G**3 *m *m1 *m2 *Mo**3/(5 *c**5)
+        risco = self._binary.Risco() *pc # [m]
+        
+        r = ( 4 *(t *cGW +risco**4/4) )**(1/4)
+        
+        return r/pc # [pc]
+    
     
     def t_to_c(self, r: float, m1: float = None, m2: float = None) -> float:
-        """ Returns the time it takes for the two objects to reach the ISCO separation [m]. """
+        """ Returns the time it takes for the two objects to reach the ISCO separation [pc]. """
         
         if m1 is None: m1 = self._binary.m1
         if m2 is None: m2 = self._binary.m2
         
-        return (5 *c**5 *r**4) / (256 * G**3 *(m1 +m2) *m1 *m2 *Mo**3) # [s]
+        m = m1 +m2 # [Msun]
+        
+        cGW = 64 *G**3 *m *m1 *m2 *Mo**3/(5 *c**5)
+        
+        y = lambda r: 1/4 *(r *pc)**4
+        t = -(y(self._binary.Risco()) -y(r))/cGW
+        
+        return t # [s]
     
     def Phi(self, fGW: float, m1: float = None, m2: float = None) -> float:
         """ Calculates the phase related to a binary or gravitational wave signal."""
