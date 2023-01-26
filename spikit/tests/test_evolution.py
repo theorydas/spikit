@@ -9,8 +9,9 @@ from spikit.tests.fixtures import default_binary, default_spike
 from pytest import approx
 from numpy import sum
 
-def test_zero_evolution():
-    system = Binary(10, 5)
+def test_zero_evolution(default_binary):
+    assert default_binary.da_dt(dE_dt = 0, dm2_dt = 0, r = 50, a = 100) == 0 # [pc/s]
+    assert default_binary.de_dt(dE_dt = 0, dL_dt = 0, dm2_dt = 0, r = 50, a = 100, e = 0.45)  == 0 # [1/s]
 
 def test_vacuum_merger_time_order_2(default_binary: Binary):
     # Setup binary and gravitational wave losses.
@@ -20,7 +21,7 @@ def test_vacuum_merger_time_order_2(default_binary: Binary):
     t_expected_merger = 8 *yr # The time at which the merger is expected to occur.
     a0 = gw.vacuum_merger_distance(t_expected_merger) # Starting distance [pc]
     
-    t, a = StaticSolver(binary, gw).solve(gw.vacuum_merger_distance(t_expected_merger), h = 1e-2)
+    t, a = StaticSolver(binary, gw).solve(a0, h = 1e-2)
     
     assert t[-1] == approx(t_expected_merger, rel = 1e-2)
 
@@ -32,7 +33,7 @@ def test_vacuum_merger_time_order_1(default_binary: Binary):
     t_expected_merger = 8 *yr # The time at which the merger is expected to occur.
     a0 = gw.vacuum_merger_distance(t_expected_merger) # Starting distance [pc]
     
-    t, a = StaticSolver(binary, gw).solve(gw.vacuum_merger_distance(t_expected_merger), h = 1e-2, order = 1)
+    t, a = StaticSolver(binary, gw).solve(a0, h = 1e-2, order = 1)
     
     assert t[-1] == approx(t_expected_merger, rel = 1e-1)
 
