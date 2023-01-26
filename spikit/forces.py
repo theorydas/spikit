@@ -199,31 +199,6 @@ class DynamicalFrictionIso(DynamicalFriction):
         xi_0l = self._spike.xi_Nl(0, chi)
         
         return xi_0l
-    
-    def df_merger_time(self, r: float, m1: float = None, m2: float = None) -> float:
-        if m1 is None: m1 = self._binary.m1
-        if m2 is None: m2 = self._binary.m2
-        
-        m = m1 +m2 # [Msun]
-        gammasp = self._spike.gammasp
-        
-        # This equation is only defined when lnL and xi are constant in space.
-        # Pick a random point, i.e. 100Risco to calculate this.
-        r2 = 100 *self._binary.Risco() # [pc]
-        u = self._binary.u(r2) # [m/s]
-        
-        lnL = self.lnL(r2, u, m1, m2)
-        xi = self.xi_DF(r2, u, m1)
-        
-        cGW = 64 *G**3 *m *m1 *m2 *Mo**3/(5 *c**5)
-        cDF = 8 *pi *m2/m1 *(G/m/Mo)**(0.5) *lnL *self._spike.rho6 *Mo/pc**3 *(1e-6 *pc)**gammasp *xi
-        
-        ksi = cDF/cGW
-        
-        y = lambda r: 1/4 *(r *pc)**4 *hyp2f1(1, 8/(11 -2 *gammasp), 1 +8/(11 -2 *gammasp), -ksi *(r *pc)**(11/2 -gammasp))
-        t = -(y(self._binary.Risco()) -y(r))/cGW
-        
-        return t # [s]
 
 # ====================
 

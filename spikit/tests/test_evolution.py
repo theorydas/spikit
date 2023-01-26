@@ -3,7 +3,7 @@ from spikit.forces import GravitationalWaves, DynamicalFrictionIso, AccretionIso
 from spikit.units import yr, day, pc
 from spikit.solvers import StaticSolver
 from spikit.spike import StaticPowerLaw
-from spikit.blueprients import VacuumMerger
+from spikit.blueprients import VacuumMerger, SpikeDFMerger
 
 
 from spikit.tests.fixtures import default_binary, default_spike
@@ -38,7 +38,7 @@ def test_vacuum_merger_time_order_1(default_binary: Binary):
     
     assert t[-1] == approx(t_expected_merger, rel = 1e-1)
 
-def test_zero_density_evolution(default_binary: Binary):
+def test_zero_density_evolution_on_solvers(default_binary: Binary):
     binary = default_binary
     spike = StaticPowerLaw(binary, 7/3, 0)
 
@@ -54,7 +54,7 @@ def test_zero_density_evolution(default_binary: Binary):
     
     assert sum(t_vacuum -t_spike) == approx(0, rel = 1e-1)
 
-def test_reconstruct_published_merger():
+def test_reconstruct_published_merger_with_solver():
     """ According to the paper arXiv:2002.12811v2, VB, page 14,
     this merger should be sped up by 48 days in 5 years. This used the old Coulomb logarithm.
     """
@@ -69,7 +69,7 @@ def test_reconstruct_published_merger():
     
     assert (5 *yr -t[-1])/day == approx(48, rel = 1e-1)
 
-def test_df_merger_time(default_spike: StaticPowerLaw):    
+def test_df_merger_time_vs_solver(default_spike: StaticPowerLaw):    
     spike = default_spike
     
     gw = GravitationalWaves(spike.binary)
@@ -77,9 +77,9 @@ def test_df_merger_time(default_spike: StaticPowerLaw):
     
     t_vacuum_merger = 5 *yr
     a0 = VacuumMerger(spike.binary).r(t_vacuum_merger)
-    t_df_merger = df.df_merger_time(a0)
+    t_df_merger = SpikeDFMerger(spike).t_to_c(a0)
     
-    t, a = StaticSolver(spike.binary, [gw, df]).solve(a0, h = 1e-2, order = 1)
+    t, _ = StaticSolver(spike.binary, [gw, df]).solve(a0, h = 1e-2, order = 1)
     
     assert t[-1] == approx(t_df_merger, rel = 1e-1)
 
@@ -91,7 +91,7 @@ def test_zero_density_merger_time(default_binary: Binary):
     
     a0 = 100 *spike.binary.Risco() # [pc]
     
-    t_df_merger = df.df_merger_time(a0)
+    t_df_merger = SpikeDFMerger(spike).t_to_c(a0)
     t_df_merger = VacuumMerger(spike.binary).t_to_c(a0)
     
     assert t_df_merger == t_df_merger
