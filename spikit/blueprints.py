@@ -6,28 +6,20 @@ from spikit.forces import DynamicalFrictionIso
 from abc import ABC
 from scipy.special import hyp2f1
 
-class Blueprint(ABC):
+class Merger(ABC):
     def __init__(self):
         pass
     
     def r(self, t: float, m1: float = None, m2: float = None) -> float:
-        """ Returns the distance between the two objects [m] at time t. """
-        
-        if m1 is None: m1 = self._binary.m1
-        
         pass
     
     def t_to_c(self, r: float, m1: float = None, m2: float = None) -> float:
-        """ Returns the time it takes for the two objects to reach the ISCO separation [m]. """
-        
-        if m1 is None: m1 = self._binary.m1
+        pass
     
     def Phi(self, fGW: float, m1: float = None, m2: float = None) -> float:
-        """ Calculates the phase related to a binary or gravitational wave signal."""
-
         pass
 
-class VacuumMerger(Blueprint):
+class VacuumMerger(Merger):
     def __init__(self, binary: Binary):
         self._binary = binary
     
@@ -72,7 +64,7 @@ class VacuumMerger(Blueprint):
         
         return 1/16 *(c**3 / (pi *G *Mc *Mo *fGW))**(5/3)
 
-class SpikeDFMerger(Blueprint):
+class SpikeDFMerger(Merger):
     def __init__(self, spike: Spike, isotropic: bool = True):
         self._spike = spike
         self._binary = spike.binary
