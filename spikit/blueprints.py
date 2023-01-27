@@ -81,7 +81,7 @@ class SpikeDFMerger(Merger):
         # This equation is only defined when lnL and xi are constant in space.
         # Pick a random point, i.e. 100Risco to calculate this.
         r2 = 100 *self._binary.Risco() # [pc]
-        u = self._binary.u(r2) # [m/s]
+        u = self._binary.u2(r2) # [m/s]
         
         lnL = self.df.lnL(r2, u, m1, m2)
         xi = 1 if not self.isotropic else self.df.xi_DF(r2, u, m1)

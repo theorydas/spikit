@@ -97,11 +97,12 @@ class Binary:
         
         return sqrt(2 *G *m1 *Mo /(r *pc)) # [m/s]
     
-    def u(self, r2: float, a: float = None) -> float:
+    def u(self, r2: float, a: float = None, m: float = None) -> float:
         """ The orbital velocity [m/s] of the binary at a given separation r2 [pc]
         and semi-major axis a [pc]. """
         
         if a is None: a = r2 # [pc]
+        if m is None: m = self.m()
         
         return sqrt(G *self.m() *Mo *(2/r2 -1/a)/pc) # [m/s]
     
@@ -113,21 +114,26 @@ class Binary:
     
     def f(self, a: float, m: float = None) -> float:
         """ The orbital frequency [Hz] of the binary at a given semi-major axis a [pc]. """
+        
         if m is None: m = self.m()
         
         return 1/self.T(a, m)
     
-    def u1(self, r2: float, a: float, m1: float = None, m2: float = None) -> float:
+    def u1(self, r2: float, a: float = None, m1: float = None, m2: float = None) -> float:
         """ The orbital velocity [m/s] of the larger black hole at a given separation r2 [pc]. """
+        
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
+        if a is None: a = r2 # [pc]
         
         return self.u(r2, a) *m2/(m1 +m2) # [m/s]
     
-    def u2(self, r2: float, a: float, m1: float = None, m2: float = None) -> float:
+    def u2(self, r2: float, a: float = None, m1: float = None, m2: float = None) -> float:
         """ The orbital velocity [m/s] of the smaller black hole at a given separation r2 [pc]. """
+        
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
+        if a is None: a = r2 # [pc]
         
         return self.u(r2, a) *m1/(m1 +m2) # [m/s]
     

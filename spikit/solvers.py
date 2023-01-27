@@ -17,7 +17,7 @@ class StaticSolver():
     def _integrate_order_2(self, a: float, t: float, h: float) -> tuple: # TODO: Implement mass change also.
         """ A modified, second order method for solving the static problem."""
         # First step
-        r2 = a; u = self.binary.u(r2)
+        r2 = a; u = self.binary.u2(r2)
         m = self.binary.m1 +self.binary.m2
         
         dEdt_1 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
@@ -27,7 +27,7 @@ class StaticSolver():
 
         a += 2/3 *dadt_1 *dt # [pc]
         # Second step
-        r2 = a; u = self.binary.u(r2)
+        r2 = a; u = self.binary.u2(r2)
         
         dEdt_2 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
         dadt_2 = self.binary.da_dt(dE_dt = dEdt_2, dm2_dt = 0, r2 = r2, a = a, m = m) # [pc/s]
@@ -39,7 +39,7 @@ class StaticSolver():
     
     def _integrate_order_1(self, a: float, t: float, h: float) -> tuple:
         """ A 1st order solver."""
-        r2 = a; u = self.binary.u(r2)
+        r2 = a; u = self.binary.u2(r2)
         m = self.binary.m1 +self.binary.m2
         
         dEdt = -sum([loss.dE_dt(r2, u) for loss in self.losses])

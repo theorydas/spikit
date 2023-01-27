@@ -68,3 +68,14 @@ def test_cycle_eccentricity(default_binary: Binary):
     e_ = system.e(Eorb, Lorb)
     
     assert e == approx(e_)
+
+def test_vis_visa_velocity(default_binary: Binary):
+    system = default_binary
+    
+    a = 10; r2 = 8
+    
+    u2 = system.u2(r2 = r2, a = a)
+    u = system.u(r2 = r2, a = a)
+    q = system.q()
+    
+    assert u/u2 == approx(1 +q)
