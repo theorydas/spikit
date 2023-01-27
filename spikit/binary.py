@@ -99,7 +99,7 @@ class Binary:
     
     def u(self, r2: float, a: float = None) -> float:
         """ The orbital velocity [m/s] of the binary at a given separation r2 [pc]
-        and semi-major axis a [pc]."""
+        and semi-major axis a [pc]. """
         
         if a is None: a = r2 # [pc]
         
@@ -116,6 +116,20 @@ class Binary:
         if m is None: m = self.m()
         
         return 1/self.T(a, m)
+    
+    def u1(self, r2: float, a: float, m1: float = None, m2: float = None) -> float:
+        """ The orbital velocity [m/s] of the larger black hole at a given separation r2 [pc]. """
+        if m1 is None: m1 = self.m1
+        if m2 is None: m2 = self.m2
+        
+        return self.u(r2, a) *m2/(m1 +m2) # [m/s]
+    
+    def u2(self, r2: float, a: float, m1: float = None, m2: float = None) -> float:
+        """ The orbital velocity [m/s] of the smaller black hole at a given separation r2 [pc]. """
+        if m1 is None: m1 = self.m1
+        if m2 is None: m2 = self.m2
+        
+        return self.u(r2, a) *m1/(m1 +m2) # [m/s]
     
     # ======== Conservative Quantities ========
     
@@ -159,13 +173,13 @@ class Binary:
     
     # ======== Evolution ========
     
-    def da_dt(self, dE_dt: float, dm2_dt: float, r: float, a: float, m1: float = None) -> float:
+    def da_dt(self, dE_dt: float, dm2_dt: float, r2: float, a: float, m: float = None) -> float:
         """ The rate of change of the semi-major axis [pc/s] given a force F [N] acting
         in the direction of its motion and a mass rate for the companion [Msun/s]. """
         
-        if m1 is None: m1 = self.m1 # [Msun]
+        if m is None: m = self.m() # [Msun]
         
-        return -a *( dE_dt/self.Eorb(a) + dm2_dt/m1 *(2 *a/r -1)) # [pc/s]
+        return -a *( dE_dt/self.Eorb(a) + dm2_dt/m *(2 *a/r2 -1)) # [pc/s]
     
     def de_dt(self, dE_dt: float, dL_dt: float, dm2_dt: float, r: float, a: float, e: float, m1: float = None) -> float:
         """ The rate of change of the eccentricity [1/s] given a force F [N] acting
