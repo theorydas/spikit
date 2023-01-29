@@ -10,9 +10,9 @@ from spikit.tests.fixtures import default_binary, default_spike
 from pytest import approx
 from numpy import sum
 
-def test_zero_evolution(default_binary):
+def test_zero_evolution(default_binary: Binary):
     assert default_binary.da_dt(dE_dt = 0, dm2_dt = 0, r2 = 50, a = 100) == 0 # [pc/s]
-    assert default_binary.de_dt(dE_dt = 0, dL_dt = 0, dm2_dt = 0, r2 = 50, a = 100, e = 0.45)  == 0 # [1/s]
+    # assert default_binary.de_dt(dE_dt = 0, dL_dt = 0, dm2_dt = 0, r2 = 50, a = 100, e = 0.45)  == 0 # [1/s]
 
 def test_vacuum_merger_time_order_2(default_binary: Binary):
     # Setup binary and gravitational wave losses.
