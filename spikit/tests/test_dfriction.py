@@ -15,4 +15,5 @@ def test_zero_desnity_df_force(default_binary: Binary):
     
     acc = DynamicalFriction(spike)
     
-    assert acc.F(1, 1) == 0 # [N]
+def test_no_mass_change_from_df(default_spike: Spike):
+    assert DynamicalFriction(default_spike).dm2_dt(1, 1) == 0 # [N]

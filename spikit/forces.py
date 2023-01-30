@@ -30,13 +30,10 @@ class Force(ABC):
         
         return self.F(r2, u, m1, m2) /(mu *Mo *u) # [log(J m/s)]
     
-    def dL_dt(self, r2: float, u: float, a: float, e: float, m1: float = None, m2: float = None) -> float:
-        """ Returns the rate of change of the orbital angular momentum [J m/s] due to the force. """
+    def dm2_dt(self, r2: float, u: float, m2: float = None) -> float:
+        """ Returns the rate of change of the mass [Msun/s] due to the force. """
         
-        if m1 is None: m1 = self._binary.m1 # [Msun]
-        if m2 is None: m2 = self._binary.m2 # [Msun]
-        
-        return self.dlnL_dt(r2, u, m1, m2) *self._binary.Lorb(a, e, m1, m2) # [J m/s]
+        return r2 *0 # [Msun/s]
 
 class Accretion(Force):
     """ The base accretion force. """
@@ -202,7 +199,7 @@ class DynamicalFrictionIso(DynamicalFriction):
 
 # ====================
 
-class GravitationalWaves:
+class GravitationalWaves(Force):
     def __init__(self, binary: Binary):
         self._binary = binary
     

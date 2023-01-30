@@ -14,43 +14,50 @@ class StaticSolver():
         
         pass
     
-    def _integrate_order_2(self, a: float, t: float, h: float) -> tuple: # TODO: Implement mass change also.
+    def _integrate_order_2(self, a: float, m2: float, t: float, h: float) -> tuple:
         """ A modified, second order method for solving the static problem."""
-        # First step
-        r2 = a; u = self.binary.u2(r2)
-        m = self.binary.m1 +self.binary.m2
         
+        # First step
+        r2 = a; u = self.binary.u2(r2, m1 = self.binary.m1, m2 = m2)
+        
+        dm2dt_1 =  -sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt_1 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt_1 = self.binary.da_dt(dE_dt = dEdt_1, dm2_dt = 0, r2 = r2, a = a, m = m) # [pc/s]
-
+        dadt_1 = self.binary.da_dt(dE_dt = dEdt_1, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
+        
         dt = abs(a/dadt_1) *h # [s]
 
         a += 2/3 *dadt_1 *dt # [pc]
-        # Second step
-        r2 = a; u = self.binary.u2(r2)
+        m2 += 2/3 *dm2dt_1 *dt # [pc]
         
+        # Second step
+        r2 = a; u = self.binary.u2(r2, m1 = self.binary.m1, m2 = m2)
+        
+        dm2dt_2 = sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt_2 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt_2 = self.binary.da_dt(dE_dt = dEdt_2, dm2_dt = 0, r2 = r2, a = a, m = m) # [pc/s]
+        dadt_2 = self.binary.da_dt(dE_dt = dEdt_2, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
         
         t += dt # [s]
         a += dt/12 *(9 *dadt_2 -5 *dadt_1) # [pc]
+        m2 += dt/12 *(9 *dm2dt_2 -5 *dm2dt_1) # [Mo]
         
-        return a, t
+        return a, m2, t
     
-    def _integrate_order_1(self, a: float, t: float, h: float) -> tuple:
+    def _integrate_order_1(self, a: float, m2: float, t: float, h: float) -> tuple:
         """ A 1st order solver."""
-        r2 = a; u = self.binary.u2(r2)
-        m = self.binary.m1 +self.binary.m2
         
+        r2 = a; u = self.binary.u2(r2, m1 = self.binary.m1, m2 = m2)
+        
+        dm2dt = sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt = self.binary.da_dt(dE_dt = dEdt, dm2_dt = 0, r2 = r2, a = a, m = m) # [pc/s]
-
+        dadt = self.binary.da_dt(dE_dt = dEdt, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
+        
         dt = abs(a/dadt) *h # [s]
 
         a += dadt *dt # [pc]
+        m2 += dm2dt *dt # [Mo]
         t += dt # [s]
         
-        return a, t
+        return a, m2, t
     
     def solve(self, a0: float, e0: float = 0, h: float = 1e-2, order: int = 2):
         """
@@ -60,7 +67,7 @@ class StaticSolver():
         """
         # Raise an error if the initial conditions are not valid.
         if e0 < 0 or e0 >= 1: raise ValueError("The eccentricity must be between 0 and 1.")
-        if a0 <= self.binary.Risco(): raise ValueError("The initial separation must be larger than the innermost stable circular orbit.")
+        if a0 *(1 -e0) <= self.binary.Risco(): raise ValueError("The initial periapsis must be larger than the Innermost Stable Circular Orbit.")
         if order not in [1, 2]: raise ValueError("The order must be 1 or 2.")
         
         # Setup binary and gravitational wave losses.
@@ -69,21 +76,25 @@ class StaticSolver():
         
         # Evolve the binary.
         a_list = [a0]
+        m2_list = [self.binary.m2]
         t_list = [0]
 
         while a_list[-1] > risco:
-            a = a_list[-1]; t = t_list[-1]
+            a = a_list[-1]; m2 = m2_list[-1]; t = t_list[-1]
             
-            a_, t_ = integrator(a, t, h = h)
-            a_list.append(a_); t_list.append(t_)
+            a_, m2_, t_ = integrator(a, m2, t, h = h)
+            a_list.append(a_); t_list.append(t_); m2_list.append(m2_)
 
         t = np.array(t_list)
+        m2 = np.array(m2_list)
         a = np.array(a_list)
 
         # Interpolate the last step to the risco.
+        m2_final = (risco -a[-1]) *(m2[-2] -m2[-1])/(a[-2] -a[-1]) +m2[-1]
         t_final = (risco -a[-1]) *(t[-2] -t[-1])/(a[-2] -a[-1]) +t[-1]
-
-        t = np.append(t[:-1], t_final)
-        a = np.append(a[:-1], risco)
         
-        return t, a
+        a = np.append(a[:-1], risco)
+        m2 = np.append(m2[:-1], m2_final)
+        t = np.append(t[:-1], t_final)
+        
+        return t, a, m2

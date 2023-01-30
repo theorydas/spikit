@@ -22,7 +22,7 @@ def test_vacuum_merger_time_order_2(default_binary: Binary):
     t_expected_merger = 8 *yr # The time at which the merger is expected to occur.
     a0 = VacuumMerger(binary).r(t_expected_merger) # Starting distance [pc]
     
-    t, a = StaticSolver(binary, gw).solve(a0, h = 1e-2)
+    t, a, m2 = StaticSolver(binary, gw).solve(a0, h = 1e-2)
     
     assert t[-1] == approx(t_expected_merger, rel = 1e-2)
 
@@ -34,7 +34,7 @@ def test_vacuum_merger_time_order_1(default_binary: Binary):
     t_expected_merger = 8 *yr # The time at which the merger is expected to occur.
     a0 = VacuumMerger(binary).r(t_expected_merger) # Starting distance [pc]
     
-    t, a = StaticSolver(binary, gw).solve(a0, h = 1e-2, order = 1)
+    t, a, m2 = StaticSolver(binary, gw).solve(a0, h = 1e-2, order = 1)
     
     assert t[-1] == approx(t_expected_merger, rel = 1e-1)
 
@@ -49,8 +49,8 @@ def test_zero_density_evolution_on_solvers(default_binary: Binary):
     t_expected_merger = 8 *yr # The time at which the merger is expected to occur.
     a0 = VacuumMerger(binary).r(t_expected_merger) # Starting distance [pc]
     
-    t_vacuum, a_vacuum = StaticSolver(binary, gw).solve(a0, h = 1e-1, order = 1)
-    t_spike, a_spike = StaticSolver(binary, [gw, df, acc]).solve(a0, h = 1e-1, order = 1)
+    t_vacuum, a_vacuum, _ = StaticSolver(binary, gw).solve(a0, h = 1e-1, order = 1)
+    t_spike, a_spike, _ = StaticSolver(binary, [gw, df, acc]).solve(a0, h = 1e-1, order = 1)
     
     assert sum(t_vacuum -t_spike) == approx(0, rel = 1e-1)
 
@@ -65,7 +65,7 @@ def test_reconstruct_published_merger_with_solver():
     df = DynamicalFrictionIso(spike)
     df.b_eff = lambda r2, u, q: r2 *pc *(q)**(0.5) # For old Coulomb logarithm.
     
-    t, _ = StaticSolver(binary, [gw, df]).solve(a0 = VacuumMerger(binary).r(5 *yr), h = 1e-2)
+    t, _, _ = StaticSolver(binary, [gw, df]).solve(a0 = VacuumMerger(binary).r(5 *yr), h = 1e-2)
     
     assert (5 *yr -t[-1])/day == approx(48, rel = 1e-1)
 
@@ -79,7 +79,7 @@ def test_df_merger_time_vs_solver(default_spike: StaticPowerLaw):
     a0 = VacuumMerger(spike.binary).r(t_vacuum_merger)
     t_df_merger = SpikeDFMerger(spike).t_to_c(a0)
     
-    t, _ = StaticSolver(spike.binary, [gw, df]).solve(a0, h = 1e-2, order = 1)
+    t, _, _ = StaticSolver(spike.binary, [gw, df]).solve(a0, h = 1e-2, order = 1)
     
     assert t[-1] == approx(t_df_merger, rel = 1e-1)
 
