@@ -21,14 +21,16 @@ class Force(ABC):
         
         return self.F(r2, u, m1, m2) *u # [J/s]
     
-    def dlnL_dt(self, r2: float, u: float, m1: float = None, m2: float = None) -> float:
-        """ Returns the rate of change of the log of the orbital angular momentum [log(J m/s)] due to the force. """
+    def dL_dt(self, r2: float, u: float, a: float, e: float, m1: float = None, m2: float = None) -> float:
+        """ Returns the rate of change of the orbital angular momentum [J m/s] due to the force. """
+        
         if m1 is None: m1 = self._binary.m1 # [Msun]
         if m2 is None: m2 = self._binary.m2 # [Msun]
         
         mu = Binary(m1, m2).mu() # [Msun]
+        dlnL_dt = self.F(r2, u, m1, m2) /(mu *Mo *u) # [log(J m/s)]
         
-        return self.F(r2, u, m1, m2) /(mu *Mo *u) # [log(J m/s)]
+        return dlnL_dt *self._binary.Lorb(a, e, m1, m2) # [J m/s]
     
     def dm2_dt(self, r2: float, u: float, m2: float = None) -> float:
         """ Returns the rate of change of the mass [Msun/s] due to the force. """
