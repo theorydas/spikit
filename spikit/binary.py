@@ -1,5 +1,7 @@
 from spikit.units import *
-from numpy import sqrt, cos
+from numpy import sqrt, cos, sin, linspace
+
+import matplotlib.pyplot as plt
 
 # ============================
 # ======== Black Hole ========
@@ -196,3 +198,31 @@ class Binary:
     #     if m1 is None: m1 = self.m1 # [Msun]
         
     #     return - (1 -e**2)/e *( dE_dt/2/self.Eorb(a) + dL_dt/self.Lorb(a, e) + dm2_dt/m1 *(a/r2 -1)) # [1/s]
+    
+    # ======== Misc ========
+    
+    def draw_orbit(self, a: float, e: float = 0, m1: float = None, m2: float = None):
+        """ Draw the orbit of the binary. """
+        
+        if e < 0 or e >= 1: raise ValueError("The eccentricity must be between 0 and 1.")
+        
+        if m1 is None: m1 = self.m1 # [Msun]
+        if m2 is None: m2 = self.m2 # [Msun]
+        
+        theta = linspace(0, 2 *pi, 1000)
+
+        M1 = BlackHole(m1)
+        
+        r2 = self.r2(a, e, theta)
+        x = r2 *cos(theta)
+        y = r2 *sin(theta)
+
+        plt.figure(figsize = (5, 4.5))
+        plt.plot(x, y, linewidth = 1)
+        plt.axis('equal')
+        plt.xlabel("Separation x [pc]")
+        plt.ylabel("Separation y [pc]")
+
+        x = M1.Rs *cos(theta)
+        y = M1.Rs *sin(theta)
+        plt.fill_between(x, y, color = "black")
