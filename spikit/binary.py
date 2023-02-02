@@ -189,15 +189,16 @@ class Binary:
         
         return -a *( dE_dt/self.Eorb(a) + dm2_dt/m *(2 *a/r2 -1)) # [pc/s]
     
-    # def de_dt(self, dE_dt: float, dL_dt: float, dm2_dt: float, r2: float, a: float, e: float, m1: float = None) -> float:
-    #     """ The rate of change of the eccentricity [1/s] given a force F [N] acting
-    #     in the direction of its motion and a mass rate for the companion [Msun/s]. """
-    #     # TODO: Is this at O(m)?, Is this even correct?
+    def de_dt(self, dE_dt: float, dL_dt: float, dm2_dt: float, r2: float, a: float, e: float, m1: float = None, m2: float = None) -> float:
+        """ The rate of change of the eccentricity [1/s] given a force F [N] acting
+        in the direction of its motion and a mass rate for the companion [Msun/s]. """
         
-    #     if e == 0: return 0
-    #     if m1 is None: m1 = self.m1 # [Msun]
+        if e == 0: return 0
+        if m1 is None: m1 = self.m1 # [Msun]
+        if m2 is None: m2 = self.m2 # [Msun]
         
-    #     return - (1 -e**2)/e *( dE_dt/2/self.Eorb(a) + dL_dt/self.Lorb(a, e) + dm2_dt/m1 *(a/r2 -1)) # [1/s]
+        m = m1 +m2 # [Msun]
+        return - (1 -e**2)/e *( dE_dt/2/self.Eorb(a) + (m1/m) *dL_dt/self.Lorb(a, e) + dm2_dt/m *(a/r2 -1)) # [1/s]
     
     # ======== Misc ========
     
