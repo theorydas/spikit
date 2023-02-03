@@ -30,8 +30,7 @@ class PowerLaw(Spike):
         elif rho6 != 0 and rhosp != 0:
             raise ValueError("rho6 and rhosp are BOTH non-zero, please only specify one.")
         
-        #  The normalization of the power law distribution function.
-        self.A_f = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
+        
     
     def rsp(self, gammasp: float = None, m1: float = None, rhosp: float = None, rho6: float = None) -> float:
         """ The spike's size [pc].
@@ -130,8 +129,9 @@ class StaticPowerLaw(PowerLaw):
             chi is the ratio of the orbital velocity to the escape velocity.
             N is the order of the velocity-moment.
         """
+        A_v = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
         
-        return self.A_f *chi**3 / (N +3) *hyp2f1(3/2 -self.gammasp, (N +3)/2, (N +5)/2, chi**2)
+        return A_v *chi**3 / (N +3) *hyp2f1(3/2 -self.gammasp, (N +3)/2, (N +5)/2, chi**2)
 
     def xi_Nu(self, N: float, chi: float) -> float:
         """ Returns the upper, normalized velocity moment (v/u)^N for particles with v > u.
