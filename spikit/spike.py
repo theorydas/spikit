@@ -138,4 +138,4 @@ class StaticPowerLaw(PowerLaw):
             N is the order of the velocity-moment.
         """
         
-        return self.A_f / (N +3) *( chi**-N * hyp2f1(3/2 -self.gammasp, (N +3)/2, (N +5)/2, 1) -chi**3 *hyp2f1(3/2 -self.gammasp, (N +3)/2, (N +5)/2, chi**2) )
+        return self.xi_Nl(N, 1) - self.xi_Nl(N, chi)
