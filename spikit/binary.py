@@ -28,6 +28,18 @@ class BlackHole:
         """ The innermost stable circular orbit (ISCO) radius [pc] of the black hole. """
         
         return 6 *self.Rm # [pc]
+    
+    def V(self, r: float) -> float:
+        """ The relative (with respects to infinity) gravitational potential [J/kg]
+        of the black hole at a given radius r [pc]. """
+        
+        return -G *self.m *Mo /(r *pc) # [J/kg]
+    
+    def Psi(self, r: float) -> float:
+        """ The relative (with respects to infinity) gravitational potential [J/kg]
+        of the black hole at a given radius r [pc]. """
+        
+        return -self.V(r) # [J/kg]
 
 # ========================
 # ======== Binary ========
@@ -40,6 +52,14 @@ class Binary:
         
         self.m1 = m1 # [Msun] Central black hole.
         self.m2 = m2 # [Msun] Companion.
+    
+    @property
+    def M1(self) -> BlackHole:
+        return BlackHole(self.m1)
+    
+    @property
+    def M2(self) -> BlackHole:
+        return BlackHole(self.m2)
     
     def m(self, m1: float = None, m2: float = None) -> float:
         """ The total mass [Msun] of the binary. """

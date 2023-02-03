@@ -6,10 +6,48 @@ from warnings import warn
 from abc import ABC
 import numpy as np
 
+N_GRID = 100_000 # The number of grid points used in the distribution function.
+
 class Spike(ABC):
     """ The default spike class. """
     def __init__(self, binary: Binary = None) -> None:
         self.binary = binary
+        
+        # Vectorize integral calculations.
+        self.rho_vec = np.vectorize(self.rho)
+        # self.velocity_moment = np.vectorize(self.velocity_moment)
+    
+    def Psi(self, r):
+        pass
+    
+    def fv(self, v: float, r: float) -> float:
+        rho = self.rho(r) * Mo/pc**3 # [Kg/m3]
+        
+        feps = np.interp(self.Psi(r) -v**2/2, self.eps, self.f_eps)
+        fv = 4 *np.pi *v**2/rho *feps
+        
+        return fv
+    
+    def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
+        """ The density of the spike [Mo/pc3]. """
+        if r == 0:
+            warn("The spike's density is undefined at r = 0.")
+            return 0
+        
+        v = np.linspace(chi_min, chi_max, 500)[::-1] *self.binary.Vmax(r)
+        eps = self.Psi(r) - v**2/2
+        
+        feps = np.interp(eps, self.eps, self.f_eps)
+        
+        return 4 *np.pi *np.trapz(feps *v, eps) /(Mo/pc**3) # [Mo/pc3]
+
+    def velocity_moment(self, r: float, k: float = 0, chi_min: float = 0, chi_max: float = 1) -> float:
+        """ The k-th velocity moment of the spike. """
+        
+        v = np.linspace(chi_min, chi_max, 1000) *self.binary.Vmax(r)
+        fv = self.fv_init(v, r)
+        
+        return np.trapz(fv *v**k, v)
 
 class PowerLaw(Spike):
     """ The default power-law spike. """
@@ -30,7 +68,12 @@ class PowerLaw(Spike):
         elif rho6 != 0 and rhosp != 0:
             raise ValueError("rho6 and rhosp are BOTH non-zero, please only specify one.")
         
+        self.Psi = self.binary.M1.Psi
+        self.r_min = self.binary.M1.Rs
+        self.r_max = self.rsp()
         
+        self.eps = self.Psi(np.logspace(np.log10(self.r_max), np.log10(self.r_min), N_GRID)) # The energy grid.
+        self.f_eps = self.feps_init(self.eps) # The distribution function.
     
     def rsp(self, gammasp: float = None, m1: float = None, rhosp: float = None, rho6: float = None) -> float:
         """ The spike's size [pc].
@@ -86,6 +129,23 @@ class PowerLaw(Spike):
     def rho_init(self, r: float) -> float:
         return self.rho6 *(r/1e-6)**-self.gammasp # [Msun/pc3]
     
+    def feps_init(self, eps: float) -> float:
+        r6 = 1e-6 *pc # [m]
+        rho6 = self.rho6 *Mo/pc**3 # [kg/m3]
+        gammasp = self.gammasp
+        m1 = self.binary.m1
+        
+        N = rho6 *r6**(gammasp) *gamma(gammasp +1)/gamma(gammasp -1/2) *(G *m1 *Mo)**(-gammasp) /np.sqrt(2 *np.pi)**3
+        
+        return N *eps**(gammasp -3/2)
+    
+    def fv_init(self, v: float, r: float) -> float:
+        Vmax = self.binary.Vmax(r)
+        
+        Av = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
+        
+        return Av *(1 -v**2/Vmax**2)**(self.gammasp -3/2) *v**2/Vmax**3 # [s/m]
+    
     def f_break_static(self, m1: float = None, m2: float = None, gammasp: float = None, rhosp: float = None, rho6: float = None) -> float:
         """ Returns the break frequency [Hz] as defined by the matching of the gravitational
         and dynamic friction energy losses of a static power law dark matter spike in Equation 15
@@ -117,11 +177,17 @@ class PowerLaw(Spike):
 
 class StaticPowerLaw(PowerLaw):
     """ An isotropic, power-law spike with a power-law index gammasp. """
-
+    
     def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
         xi_DF = self.xi_Nl(0, chi_max) -self.xi_Nl(0, chi_min)
         
         return self.rho_init(r) *xi_DF # [Msun/pc3]
+    
+    def feps(self, eps: float) -> float:
+        return self.feps_init(eps)
+    
+    def fv(self, v: float, r: float) -> float:
+        return self.fv_init(v, r)
     
     def xi_Nl(self, N: float, chi: float) -> float:
         """ Returns the lower, normalized velocity moment (v/u)^N for particles with v < u.
