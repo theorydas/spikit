@@ -44,6 +44,13 @@ class Spike(ABC):
         fv = self.fv_init(v, r)
         
         return np.trapz(fv *v**k, v)
+    
+    def DoS(self, eps: float) -> float:
+        """ The density of states that describes particles in the spike. """
+        
+        m1 = self.binary.m1
+        return np.sqrt(2) *np.pi**3 *(np.pi *G *m1 *Mo)**3 *self.eps**(-5/2)
+        
 
 class PowerLaw(Spike):
     """ The default power-law spike. """
