@@ -54,14 +54,14 @@ def test_velocity_moment_reconstruction(default_binary: Binary, default_dynaspik
     Vmax = default_binary.Vmax(r)
     
     vk_static = default_spike.xi_Nl(N = k, chi = chi_max) *(chi_max *Vmax)**k
-    vK_dynamic = default_dynaspike.velocity_moment(r, k = k, chi_min = 0, chi_max = chi_max)
+    vK_dynamic = default_dynaspike.v_moment(r, k = k, chi_min = 0, chi_max = chi_max)
     
     assert vk_static == approx(vK_dynamic, 1e-3)
     
 def test_normalized_velocity_zero_moment(default_binary: Binary, default_dynaspike: PowerLaw):
     r = 100 *default_binary.Risco()
     
-    assert default_dynaspike.velocity_moment(r, k = 0) == approx(1, 1e-3)
+    assert default_dynaspike.v_moment(r, k = 0) == approx(1, 1e-3)
 
 def test_velocity_distribution(default_binary: Binary, default_dynaspike: PowerLaw):
     r = 100 *default_binary.Risco()

@@ -12,10 +12,6 @@ class Spike(ABC):
     """ The default spike class. """
     def __init__(self, binary: Binary = None) -> None:
         self.binary = binary
-        
-        # Vectorize integral calculations.
-        self.rho_vec = np.vectorize(self.rho)
-        # self.velocity_moment = np.vectorize(self.velocity_moment)
     
     def Psi(self, r):
         pass
@@ -41,10 +37,10 @@ class Spike(ABC):
         
         return 4 *np.pi *np.trapz(feps *v, eps) /(Mo/pc**3) # [Mo/pc3]
 
-    def velocity_moment(self, r: float, k: float = 0, chi_min: float = 0, chi_max: float = 1) -> float:
+    def v_moment(self, r: float, k: float = 0, chi_min: float = 0, chi_max: float = 1) -> float:
         """ The k-th velocity moment of the spike. """
         
-        v = np.linspace(chi_min, chi_max, 1000) *self.binary.Vmax(r)
+        v = np.linspace(chi_min, chi_max, 500) *self.binary.Vmax(r)
         fv = self.fv_init(v, r)
         
         return np.trapz(fv *v**k, v)
