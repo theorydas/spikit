@@ -119,8 +119,10 @@ class PowerLaw(Spike):
 class StaticPowerLaw(PowerLaw):
     """ An isotropic, power-law spike with a power-law index gammasp. """
 
-    def rho(self, r: float) -> float:
-        return self.rho_init(r) # [Msun/pc3]
+    def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
+        xi_DF = self.xi_Nl(0, chi_max) -self.xi_Nl(0, chi_min)
+        
+        return self.rho_init(r) *xi_DF # [Msun/pc3]
     
     def xi_Nl(self, N: float, chi: float) -> float:
         """ Returns the lower, normalized velocity moment (v/u)^N for particles with v < u.
