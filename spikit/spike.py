@@ -172,7 +172,7 @@ class PowerLaw(Spike):
         * (m1 *Mo +m2 *Mo)**(1/3 -gammasp/3) *rsp**gammasp *ksi *(rhosp *Mo/(pc)**3) *lnL
         
         fb = c_f **(3/(11 -2 *gammasp)) # [Hz]
-
+        
         return fb # [Hz]
 
 class StaticPowerLaw(PowerLaw):
@@ -192,7 +192,7 @@ class StaticPowerLaw(PowerLaw):
     def xi_Nl(self, N: float, chi: float) -> float:
         """ Returns the lower, normalized velocity moment (v/u)^N for particles with v < u.
         
-            chi is the ratio of the orbital velocity to the escape velocity.
+            chi is the ratio of the velocity u to the escape velocity.
             N is the order of the velocity-moment.
         """
         A_v = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
@@ -202,7 +202,7 @@ class StaticPowerLaw(PowerLaw):
     def xi_Nu(self, N: float, chi: float) -> float:
         """ Returns the upper, normalized velocity moment (v/u)^N for particles with v > u.
         
-            chi is the ratio of the orbital velocity to the escape velocity.
+            chi is the ratio of the velocity u to the escape velocity.
             N is the order of the velocity-moment.
         """
         
