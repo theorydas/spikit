@@ -3,4 +3,4 @@
 
 ### `Exploring the dark universe through gravitational waves`
 
-This package aims to aiding in the search for the nature of dark matter through the lens of gravitational wave astronomy. It is a collection of user-friendly tools for simulating the evolution of black hole binaries enveloped by `dark matter spikes'.
+This package aims to assist in the search for the nature of dark matter through the lens of gravitational wave astronomy. It is a collection of user-friendly tools for simulating the inspiral of black hole binaries enveloped by `dark matter spikes'.
