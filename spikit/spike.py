@@ -49,7 +49,7 @@ class Spike(ABC):
         """ The density of states that describes particles in the spike. """
         
         m1 = self.binary.m1
-        return np.sqrt(2) *np.pi**3 *(np.pi *G *m1 *Mo)**3 *self.eps**(-5/2)
+        return np.sqrt(2) *(np.pi *G *m1 *Mo)**3 *self.eps**(-5/2)
         
 
 class PowerLaw(Spike):
