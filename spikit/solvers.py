@@ -22,7 +22,7 @@ class StaticSolver():
         
         dm2dt_1 =  -sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt_1 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt_1 = self.binary.da_dt(dE_dt = dEdt_1, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
+        dadt_1 = self.binary.da_dt(dE_dt = dEdt_1, dm2_dt = dm2dt_1, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
         
         dt = abs(a/dadt_1) *h # [s]
 
@@ -34,7 +34,7 @@ class StaticSolver():
         
         dm2dt_2 = sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt_2 = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt_2 = self.binary.da_dt(dE_dt = dEdt_2, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
+        dadt_2 = self.binary.da_dt(dE_dt = dEdt_2, dm2_dt = dm2dt_1, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
         
         t += dt # [s]
         a += dt/12 *(9 *dadt_2 -5 *dadt_1) # [pc]
@@ -49,7 +49,7 @@ class StaticSolver():
         
         dm2dt = sum([loss.dm2_dt(r2, u) for loss in self.losses])
         dEdt = -sum([loss.dE_dt(r2, u) for loss in self.losses])
-        dadt = self.binary.da_dt(dE_dt = dEdt, dm2_dt = 0, r2 = r2, a = a, m = self.binary.m1 +m2) # [pc/s]
+        dadt = self.binary.da_dt(dE_dt = dEdt, dm2_dt = dm2dt, r2 = r2, a = a) # [pc/s]
         
         dt = abs(a/dadt) *h # [s]
 
