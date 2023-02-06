@@ -186,8 +186,9 @@ class StaticPowerLaw(PowerLaw):
         
         return self.rho_init(r) *xi_DF # [Msun/pc3]
     
-    def feps(self, eps: float) -> float:
-        return self.feps_init(eps)
+    @property
+    def feps(self) -> float:
+        return self.feps_init(self.eps)
     
     def fv(self, v: float, r: float) -> float:
         return self.fv_init(v, r)

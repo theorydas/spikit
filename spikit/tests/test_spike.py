@@ -16,7 +16,7 @@ def test_static_rho_initial(default_spike: StaticPowerLaw):
     assert default_spike.rho(1) == default_spike.rho_init(1)
 
 def test_static_feps_initial(default_spike: StaticPowerLaw):    
-    assert default_spike.feps(1) == default_spike.feps_init(1)
+    assert default_spike.feps[0] == default_spike.feps_init(default_spike.eps)[0]
 
 def test_static_fv_initial(default_spike: StaticPowerLaw):    
     assert default_spike.fv(1, 100) == default_spike.fv_init(1, 100)
