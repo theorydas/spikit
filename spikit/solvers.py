@@ -4,8 +4,8 @@ from spikit.forces import GravitationalWaves, Force
 from typing import Union
 import numpy as np
 
-class StaticSolver():
-    """ The solver class for the static problem. """
+class DynamicSolver():
+    """ The solver class that utilizes a dynamic time step to solve the binary evolution problem."""
     
     def __init__(self, binary: Binary, losses: Union[GravitationalWaves, Force, list]) -> None:
         # A list of all the forces that are active.
@@ -14,8 +14,9 @@ class StaticSolver():
         
         pass
     
-    def _integrate_order_2(self, a: float, m2: float, t: float, h: float) -> tuple:
+    def _integrate_order_2(self, parameters: dict, h: float) -> tuple:
         """ A modified, second order method for solving the static problem."""
+        a = parameters["a"][-1]; t = parameters["t"][-1]; m2 = parameters["m2"][-1]
         
         # First step
         r2 = a; u = self.binary.u2(r2, m1 = self.binary.m1, m2 = m2)
@@ -40,10 +41,16 @@ class StaticSolver():
         a += dt/12 *(9 *dadt_2 -5 *dadt_1) # [pc]
         m2 += dt/12 *(9 *dm2dt_2 -5 *dm2dt_1) # [Mo]
         
-        return a, m2, t
+        new_values = {"t": [t], "a": [a], "m2": [self.binary.m2]}
+        # Update the parameters dictionary to append each new value.
+        for key in parameters.keys():
+            parameters[key] += new_values[key]
+        
+        return parameters
     
-    def _integrate_order_1(self, a: float, m2: float, t: float, h: float) -> tuple:
+    def _integrate_order_1(self, parameters: dict, h: float) -> tuple:
         """ A 1st order solver."""
+        a = parameters["a"][-1]; t = parameters["t"][-1]; m2 = parameters["m2"][-1]
         
         r2 = a; u = self.binary.u2(r2, m1 = self.binary.m1, m2 = m2)
         
@@ -58,6 +65,13 @@ class StaticSolver():
         t += dt # [s]
         
         return a, m2, t
+    
+        new_values = {"t": [t], "a": [a], "m2": [self.binary.m2]}
+        # Update the parameters dictionary to append each new value.
+        for key in parameters.keys():
+            parameters[key] += new_values[key]
+        
+        return parameters
     
     def solve(self, a0: float, e0: float = 0, h: float = 1e-2, order: int = 2) -> tuple:
         """
@@ -75,26 +89,28 @@ class StaticSolver():
         integrator = self._integrate_order_1 if order == 1 else self._integrate_order_2
         
         # Evolve the binary.
-        a_list = [a0]
-        m2_list = [self.binary.m2]
-        t_list = [0]
+        parameters = {"t": [0], "a": [a0], "m2": [self.binary.m2]}
         
-        while a_list[-1] > risco:
-            a = a_list[-1]; m2 = m2_list[-1]; t = t_list[-1]
+        while parameters["a"][-1] > risco:         
+            # Integrate the system by updating the previous dictioanry.
+            parameters = integrator(parameters, h = h)
+        
+        # Must interpolate the last entry of each array to the risco.
+        for key in parameters.keys():
+            # Convert the arrays are numpy arrays.
+            parameters[key] = np.array(parameters[key])
             
-            a_, m2_, t_ = integrator(a, m2, t, h = h)
-            a_list.append(a_); t_list.append(t_); m2_list.append(m2_)
-
-        t = np.array(t_list)
-        m2 = np.array(m2_list)
-        a = np.array(a_list)
-
-        # Interpolate the last step to the risco.
-        m2_final = (risco -a[-1]) *(m2[-2] -m2[-1])/(a[-2] -a[-1]) +m2[-1]
-        t_final = (risco -a[-1]) *(t[-2] -t[-1])/(a[-2] -a[-1]) +t[-1]
+            if key == "a":
+                # Simply replace the last value with risco.
+                parameters[key][-1] = risco
+                continue
+            
+            # Iterpolate the last step to the risco.
+            approximate_last = parameters[key][-1]
+            rate = (approximate_last -parameters[key][-2]) /(parameters["a"][-1] -parameters["a"][-2])
+            interpolated_last = (risco -parameters["a"][-1]) * rate +approximate_last
+            
+            # Update the last value.
+            parameters[key][-1] = interpolated_last
         
-        a = np.append(a[:-1], risco)
-        m2 = np.append(m2[:-1], m2_final)
-        t = np.append(t[:-1], t_final)
-        
-        return t, a, m2
+        return parameters
