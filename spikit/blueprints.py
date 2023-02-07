@@ -1,10 +1,15 @@
 from spikit.units import G, c, Mo, pi, pc
 from spikit.binary import Binary
-from spikit.spike import Spike
-from spikit.forces import DynamicalFrictionIso
+from spikit.spike import Spike, PowerLaw
+from spikit.forces import DynamicalFrictionIso, Accretion
+from spikit.feedback import AccretionDepletion
 
 from abc import ABC
-from scipy.special import hyp2f1
+from scipy.special import hyp2f1, gamma, factorial, beta
+import numpy as np
+from copy import deepcopy
+
+# A collection of analytical results for various specific (Blueprints) cases to serve as a reference.
 
 class Merger(ABC):
     def __init__(self):
@@ -95,3 +100,71 @@ class SpikeDFMerger(Merger):
         t = -(y(self._binary.Risco()) -y(r))/cGW
         
         return t # [s]
+
+class StuckAccretionDepletedPowerLaw(PowerLaw):
+    """ A blueprint that describes what happens to the spike when the binary is 'stuck' at a given separation.
+    
+    The results are derived for a quasi-circular orbit and in absence of gravitational waves, external forces,
+    but the feedback of accretion.
+    """
+    
+    def __init__(self, accretion_force: Accretion):
+        self.force = accretion_force
+        self._spike = deepcopy(accretion_force._spike)
+        self._binary = accretion_force._binary
+    
+    def rho(self, r: float, r2: float, t: float, Naccuracy = 1e-3) -> float:
+        """ Returns the density of the spike at a given radius and time. """
+        
+        if Naccuracy <= 0: raise ValueError("Naccuracy must be greater than 0.")
+    
+        # ======
+        rho6 = self._spike.rho6 # [Mo/pc3]
+        gammasp = self._spike.gammasp
+        r6 = 1e-6 # [pc]
+        
+        m1 = self._binary.m1 # [Msun]
+        bacc = self.force.b_acc(self._binary.u2(r2)) /pc # [pc]
+        T = self._binary.T(r2) # [s]
+        
+        # A constant that is used in the integral.
+        A = 2/pi**0.5 *rho6 *(r6)**gammasp *gamma(gammasp +1)/gamma(gammasp -1/2) *(G *m1)**(-gammasp)
+        
+        # The original integral can be expanded in a power series, and each term split into two parts.
+        # As long as the final density is not almost depleted, the convergence is stable.
+        summation = 0
+        n = 1
+        while True:
+            factor_n = 1/factorial(n) *( -r2 *bacc**2 /(G *m1)**3 *8 *t/T )**n
+            
+            P = G *m1/r
+            P2 = G *m1/r2
+            
+            if r < r2:
+                term = P**0.5 * P2**(3 *n +gammasp -1/2)
+                term *= beta(gammasp -1/2 +5 *n/2, 1 +n/2)
+                term *= hyp2f1(-1/2, gammasp -1/2 +5 *n/2, 3 *n +gammasp +1/2, P2/P)
+            else:
+                term = P**(gammasp +5/2 *n) *P2**(n/2)
+                term *= beta(gammasp -1/2 +5 *n/2, 3/2)
+                term *= hyp2f1(-n/2, gammasp -1/2 +5 *n/2, 5/2 *n +gammasp +1, P/P2)
+            
+            summation += factor_n *term
+            n += 1
+
+            if Naccuracy >= 1 and n > Naccuracy:
+                break
+            elif Naccuracy < 1 and abs(factor_n *term/summation) < Naccuracy:
+                break
+        
+        return self._spike.rho_init(r) +A *summation
+    
+    def feps(self, r2: float, t: float) -> float:
+        """ Returns the distribution function of the spike at a given radius and time. """
+        
+        u = self._binary.u2(r2) # [m/s]
+        T = self._binary.T(r2) # [s]
+        
+        Pacc = AccretionDepletion(self.force).Pacc(r2, u)
+        
+        return self._spike.f_eps * np.exp( -Pacc *t/T)
