@@ -101,7 +101,7 @@ class SpikeDFMerger(Merger):
         
         return t # [s]
 
-class StuckAccretionDepletedPowerLaw(PowerLaw):
+class StuckAccretionDepletedPowerLaw(StaticPowerLaw):
     """ A blueprint that describes what happens to the spike when the binary is 'stuck' at a given separation.
     
     The results are derived for a quasi-circular orbit and in absence of gravitational waves, external forces,
@@ -117,7 +117,9 @@ class StuckAccretionDepletedPowerLaw(PowerLaw):
         """ Returns the density of the spike at a given radius and time. """
         
         if Naccuracy <= 0: raise ValueError("Naccuracy must be greater than 0.")
-    
+        if t < 0: raise ValueError("t must be greater than 0.")
+        if t == 0: return self._spike.rho_init(r)
+        
         # ======
         rho6 = self._spike.rho6 # [Mo/pc3]
         gammasp = self._spike.gammasp
@@ -167,4 +169,4 @@ class StuckAccretionDepletedPowerLaw(PowerLaw):
         
         Pacc = AccretionDepletion(self.force).Pacc(r2, u)
         
-        return self._spike.f_eps * np.exp( -Pacc *t/T)
+        return self._spike.feps * np.exp( -Pacc *t/T)
