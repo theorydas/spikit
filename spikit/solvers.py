@@ -59,7 +59,7 @@ class StaticSolver():
         
         return a, m2, t
     
-    def solve(self, a0: float, e0: float = 0, h: float = 1e-2, order: int = 2, stop_condition: callable = None) -> tuple:
+    def solve(self, a0: float, e0: float = 0, h: float = 1e-2, order: int = 2) -> tuple:
         """
         Solve the static problem. 
         a0 is the initial semi-major axis [pc], e0 the initial eccentricity,
@@ -69,21 +69,17 @@ class StaticSolver():
         if e0 < 0 or e0 >= 1: raise ValueError("The eccentricity must be between 0 and 1.")
         if a0 *(1 -e0) <= self.binary.Risco(): raise ValueError("The initial periapsis must be larger than the Innermost Stable Circular Orbit.")
         if order not in [1, 2]: raise ValueError("The order must be 1 or 2.")
-        if stop_condition is not None and not callable(stop_condition): raise ValueError("The stop condition must be a callable function.")
             
         # Setup binary and gravitational wave losses.
         risco = self.binary.Risco()
         integrator = self._integrate_order_1 if order == 1 else self._integrate_order_2
-        
-        if stop_condition is None:
-            stop_condition = lambda a, m2, t: a <= risco
         
         # Evolve the binary.
         a_list = [a0]
         m2_list = [self.binary.m2]
         t_list = [0]
         
-        while not stop_condition(a_list[-1], m2_list[-1], t_list[-1]):
+        while a_list[-1] > risco:
             a = a_list[-1]; m2 = m2_list[-1]; t = t_list[-1]
             
             a_, m2_, t_ = integrator(a, m2, t, h = h)
