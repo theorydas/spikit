@@ -1,6 +1,6 @@
 from spikit.units import G, c, Mo, pi, pc
 from spikit.binary import Binary
-from spikit.spike import Spike, PowerLaw
+from spikit.spike import Spike, StaticPowerLaw
 from spikit.forces import DynamicalFrictionIso, Accretion
 from spikit.feedback import AccretionDepletion
 

@@ -179,9 +179,10 @@ class PowerLaw(Spike):
         return fb # [Hz]
 
 class StaticPowerLaw(PowerLaw):
-    """ An isotropic, power-law spike with a power-law index gammasp. """
+    """ An isotropic power law dark matter distribution that utilizes analytical expressions. """
     
     def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
+        """ Returns the density [Msun/pc3] of the dark matter distribution at a distance r [pc]. """
         xi_DF = self.xi_Nl(0, chi_max) -self.xi_Nl(0, chi_min)
         
         return self.rho_init(r) *xi_DF # [Msun/pc3]

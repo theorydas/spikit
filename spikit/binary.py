@@ -29,7 +29,7 @@ class BlackHole:
         
         return 6 *self.Rm # [pc]
     
-    def V(self, r: float) -> float:
+    def V(self, r: float) -> float: # Warning, changing the default function will NOT accurately reflect in the code.
         """ The relative (with respects to infinity) gravitational potential [J/kg]
         of the black hole at a given radius r [pc]. """
         

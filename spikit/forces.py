@@ -2,7 +2,6 @@ from spikit.units import c, pi, pc, Mo, G
 from spikit.binary import Binary, BlackHole
 from spikit.spike import Spike
 
-from scipy.special import hyp2f1
 from numpy import log
 from abc import ABC
 
