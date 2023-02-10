@@ -66,14 +66,14 @@ class Binary:
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
         
-        return self.m1 +self.m2 # [Msun]
+        return m1 +m2 # [Msun]
     
     def mu(self, m1: float = None, m2: float = None) -> float:
         """ The reduced mass [Msun] of the binary. """
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
         
-        return self.m1 *self.m2/(self.m1 +self.m2) # [Msun]
+        return m1 *m2/(m1 +m2) # [Msun]
     
     def Mchirp(self, m1: float = None, m2: float = None) -> float:
         """ The chirp mass [Msun] of the binary. """
@@ -87,7 +87,7 @@ class Binary:
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
         
-        return self.m2/self.m1
+        return m2/m1
     
     def Risco(self, m: float = None) -> float:
         """ The innermost stable circular orbit (ISCO) radius [pc] of the binary. """
@@ -167,7 +167,7 @@ class Binary:
         if m1 is None: m1 = self.m1
         if m2 is None: m2 = self.m2
         
-        return -G *self.m1 *self.m2 *Mo**2/(2 *a *pc) # [J]
+        return -G *m1 *m2 *Mo**2/(2 *a *pc) # [J]
     
     def Lorb(self, a: float, e: float = 0, m1: float = None, m2: float = None) -> float:
         """ The orbital angular momentum [Js] of the binary at a given semi-major axis a [pc] and eccentricity e. """
