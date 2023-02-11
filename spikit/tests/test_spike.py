@@ -39,11 +39,11 @@ def test_density_reconstruction_from_distribution(default_binary: Binary, defaul
 
 def test_density_reconstruction_with_velocity_range(default_binary: Binary, default_dynaspike: PowerLaw, default_spike: StaticPowerLaw):
     r = 100 *default_binary.Risco()
-    chi_min = 0.3
-    chi_max = 0.8
+    chi_lower = 0.3
+    chi_upper = 0.8
     
-    rho_static = default_spike.rho(r, chi_min = chi_min, chi_max = chi_max)
-    rho_dynamic = default_dynaspike.rho(r, chi_min = chi_min, chi_max = chi_max)
+    rho_static = default_spike.rho(r, chi_lower = chi_lower, chi_upper = chi_upper)
+    rho_dynamic = default_dynaspike.rho(r, chi_lower = chi_lower, chi_upper = chi_upper)
     
     assert rho_static == approx(rho_dynamic, 1e-3)
 
@@ -54,7 +54,7 @@ def test_velocity_moment_reconstruction(default_binary: Binary, default_dynaspik
     Vmax = default_binary.Vmax(r)
     
     vk_static = default_spike.xi_Nl(N = k, chi = chi_max) *(chi_max *Vmax)**k
-    vK_dynamic = default_dynaspike.v_moment(r, k = k, chi_min = 0, chi_max = chi_max)
+    vK_dynamic = default_dynaspike.v_moment(r, k = k, chi_lower = 0, chi_upper = chi_max)
     
     assert vk_static == approx(vK_dynamic, 1e-3)
     

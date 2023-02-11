@@ -24,23 +24,58 @@ class Spike(ABC):
         
         return fv
     
-    def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
-        """ The density of the spike [Mo/pc3]. """
-        if r == 0:
-            warn("The spike's density is undefined at r = 0.")
+    def rho(self, r: float, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
             return 0
         
-        v = np.linspace(chi_min, chi_max, 500)[::-1] *self.binary.Vmax(r)
-        eps = self.Psi(r) - v**2/2
+        Vmax = self.binary.Vmax(r) # [m/s]
+        if chi_lower < 0 or v_lower < 0:
+            chi_lower = 0; v_lower = 0
+            warn("The lower velocity limit should not be negative. Proceed as if zero.")
+        
+        if chi_upper > 1 or v_lower > Vmax:
+            chi_lower = 1; v_lower = Vmax
+            warn("The upper velocity limit should not exceed escape velocity. Proceed as if at escape.")
+        
+        if chi_lower > 0:
+            if v_lower > 0: raise ValueError("Only one of v_lower or chi_lower should be given.")
+            v_lower = chi_lower *Vmax # [m/s]
+        
+        if chi_upper < 1:
+            if v_upper is not None: raise ValueError("Only one of v_upper or chi_upper should be given.")
+            v_upper = chi_upper *Vmax # [m/s]
+        
+        if v_upper is None: v_upper = chi_upper *Vmax # [m/s]
+        if v_lower == v_upper: return 0 # If the range has no width, don't do the calculation.
+        
+        v = np.linspace(v_lower, v_upper, 500)[::-1] # [m/s]
+        eps = self.Psi(r) - v**2/2 # [m2/s2]
         
         feps = np.interp(eps, self.eps, self.f_eps)
         
         return 4 *np.pi *np.trapz(feps *v, eps) /(Mo/pc**3) # [Mo/pc3]
 
-    def v_moment(self, r: float, k: float = 0, chi_min: float = 0, chi_max: float = 1) -> float:
-        """ The k-th velocity moment of the spike. """
+    def v_moment(self, r: float, k: float = 0, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
+        Vmax = self.binary.Vmax(r) # [m/s]
+        if chi_lower < 0 or v_lower < 0:
+            chi_lower = 0; v_lower = 0
+            warn("The lower velocity limit should not be negative. Proceed as if zero.")
         
-        v = np.linspace(chi_min, chi_max, 500) *self.binary.Vmax(r)
+        if chi_upper > 1 or v_lower > Vmax:
+            chi_lower = 1; v_lower = Vmax
+            warn("The upper velocity limit should not exceed escape velocity. Proceed as if at escape.")
+        
+        if chi_lower > 0:
+            if v_lower > 0: raise ValueError("Only one of v_lower or chi_lower should be given.")
+            v_lower = chi_lower *Vmax # [m/s]
+        
+        if chi_upper < 1:
+            if v_upper is not None: raise ValueError("Only one of v_upper or chi_upper should be given.")
+            v_upper = chi_upper *Vmax # [m/s]
+        
+        if v_upper is None: v_upper = chi_upper *Vmax # [m/s]
+        if v_lower == v_upper: return 0 # If the range has no width, don't do the calculation.
+        
+        v = np.linspace(v_lower, v_upper, 500) # [m/s]
         fv = self.fv_init(v, r)
         
         return np.trapz(fv *v**k, v)
@@ -179,11 +214,30 @@ class PowerLaw(Spike):
         return fb # [Hz]
 
 class StaticPowerLaw(PowerLaw):
-    """ An isotropic power law dark matter distribution that utilizes analytical expressions. """
-    
-    def rho(self, r: float, chi_min: float = 0, chi_max: float = 1) -> float:
-        """ Returns the density [Msun/pc3] of the dark matter distribution at a distance r [pc]. """
-        xi_DF = self.xi_Nl(0, chi_max) -self.xi_Nl(0, chi_min)
+    def rho(self, r: float, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
+        if r <= 0: warn("Distance must be positive. Returning 0."); return 0
+        
+        Vmax = self.binary.Vmax(r) # [m/s]
+        if chi_lower < 0 or v_lower < 0:
+            chi_lower = 0; v_lower = 0
+            warn("The lower velocity limit should not be negative. Proceed as if zero.")
+        
+        if chi_upper > 1 or v_lower > Vmax:
+            chi_lower = 1; v_lower = Vmax
+            warn("The upper velocity limit should not exceed escape velocity. Proceed as if at escape.")
+        
+        if v_lower > 0:
+            if chi_lower > 0: raise ValueError("Only one of v_lower or chi_lower should be given.")
+            chi_lower = v_lower/Vmax # [m/s]
+        
+        if v_upper is not None: 
+            if chi_upper < 1: raise ValueError("Only one of v_upper or chi_upper should be given.")
+            chi_upper = v_upper/Vmax # [m/s]
+        
+        if chi_lower == chi_upper: return 0 # If the range has no width, don't do the calculation.
+        
+        # ----------------------------------------
+        xi_DF = self.xi_Nl(0, chi_upper) -self.xi_Nl(0, chi_lower)
         
         return self.rho_init(r) *xi_DF # [Msun/pc3]
     
