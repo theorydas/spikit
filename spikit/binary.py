@@ -109,9 +109,13 @@ class Binary:
         return a *(1 -e**2) # [pc]
     
     def r2(self, a: float = None, e = 0, theta: float = 0) -> float:
-        """ The separation [pc] of the binary at a given semi-major axis a [pc]. """
-        
-        return self.p(a, e) /(1 +e *cos(theta)) # [pc]
+    def rperi(self, a: float = None, e = 0) -> float:
+        " The binary's periapsis. "
+        return self.r2(a, e, 0) # [units]
+    
+    def rapo(self, a: float = None, e = 0) -> float:
+        """ The binary's apoapsis. """
+        return self.r2(a, e, pi) # [units]
     
     def Vmax(self, r: float, m1: float = None) -> float:
         """ The maximum orbital velocity [m/s] around the larger black hole at a given radius r [pc]. """
