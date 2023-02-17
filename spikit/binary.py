@@ -139,11 +139,11 @@ class Binary:
         return 2 *pi *sqrt((a *pc)**3 /(G *m *Mo)) # [s]
     
     def f(self, a: float, m: float = None) -> float:
-        """ The orbital frequency [Hz] of the binary at a given semi-major axis a [pc]. """
+    def w(self, a: float, m: float = None) -> float:
         
-        if m is None: m = self.m()
+        if m is None: m = self.m() # [Msun]
         
-        return 1/self.T(a, m)
+        return 2*pi *self.f(a, m) # [Hz]
     
     def u1(self, r2: float, a: float = None, m1: float = None, m2: float = None) -> float:
         """ The orbital velocity [m/s] of the larger black hole at a given separation r2 [pc]. """
