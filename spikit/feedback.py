@@ -1,10 +1,8 @@
 from abc import ABC
 import numpy as np
 
-from spikit.binary import Binary
-from spikit.spike import Spike
 from spikit.forces import Accretion
-from spikit.units import pc
+from spikit.units import pc, pi
 
 class Feedback(ABC):
     def __init__(self, accretion_force: Accretion) -> None:
@@ -27,7 +25,7 @@ class AccretionDepletion(Feedback):
         csection = self.force.csection(u) 
         vE = np.sqrt(2 *(self.binary.M1.Psi(r) -self.spike.eps) ) # m/s
         
-        gacc = 8 *np.pi**2 *vE *(r *pc) *csection
+        gacc = 8 *pi**2 *vE *(r *pc) *csection
         g = self.spike.DoS(self.spike.eps)
          
         return np.nan_to_num(gacc/g)

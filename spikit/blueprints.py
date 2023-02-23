@@ -121,7 +121,7 @@ class StuckAccretionDepletedPowerLaw(StaticPowerLaw):
         if t == 0: return self._spike.rho_init(r)
         
         # ======
-        rho6 = self._spike.rho6 # [Mo/pc3]
+        rho6 = self._spike.rho6 # [Msun/pc3]
         gammasp = self._spike.gammasp
         r6 = 1e-6 # [pc]
         
