@@ -11,7 +11,7 @@ def test_iso_df_force(default_spike: Spike):
     assert df.F(1, 1) == df0.F(1, 1) *df.xi_DF(1, 1) # [N]
 
 def test_zero_desnity_df_force(default_binary: Binary):
-    spike = StaticPowerLaw(default_binary, 7/3, rho6 = 0)
+    spike = StaticPowerLaw.from_binary(default_binary, gammasp = 7/3, rho6 = 0)
     
     df = DynamicalFriction(spike)
     

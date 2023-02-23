@@ -163,6 +163,10 @@ class PowerLaw(Spike):
         self.eps = self.Psi(np.logspace(np.log10(self.r_max), np.log10(self.r_min), N_GRID)) # The energy grid.
         self.f_eps = self.feps_init(self.eps) # The distribution function.
     
+    @classmethod
+    def from_binary(cls, binary: Binary, gammasp: float = 7/3, rho6: float = 0, rhosp: float = 0):
+        return cls(binary.m1, binary.m2, gammasp, rho6, rhosp)
+    
     def rsp(self, gammasp: float = None, m1: float = None, rhosp: float = None, rho6: float = None) -> float:
         """ The spike's size [pc]. This calculation is based off of Equation 2.2 from arxiv.org/abs/2002.12811.
         

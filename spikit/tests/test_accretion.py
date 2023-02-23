@@ -26,14 +26,16 @@ def test_iso_accretion_mass(default_spike: Spike):
     assert acc.dm2_dt(1, 1) == acc0.dm2_dt(1, 1) *acc.xi_m(1, 1) # [N]
 
 def test_zero_desnity_accretion_force(default_binary: Binary):
-    spike = StaticPowerLaw(default_binary, 7/3, rho6 = 0)
+    m1 = default_binary.m1; m2 = default_binary.m2
+    spike = StaticPowerLaw(m1 = m1, m2 = m2, gammasp = 7/3, rho6 = 0)
     
     acc = Accretion(spike)
     
     assert acc.F(1, 1) == 0 # [N]
 
 def test_zero_desnity_accretion_rate(default_binary: Binary):
-    spike = StaticPowerLaw(default_binary, 7/3, rho6 = 0)
+    m1 = default_binary.m1; m2 = default_binary.m2
+    spike = StaticPowerLaw(m1 = m1, m2 = m2, gammasp = 7/3, rho6 = 0)
     
     acc = Accretion(spike)
     

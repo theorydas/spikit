@@ -40,7 +40,7 @@ def test_vacuum_merger_time_order_1(default_binary: Binary):
 
 def test_zero_density_evolution_on_solvers(default_binary: Binary):
     binary = default_binary
-    spike = StaticPowerLaw(binary, 7/3, 0)
+    spike = StaticPowerLaw.from_binary(binary, 7/3, 0)
 
     gw = GravitationalWaves(binary)
     df = DynamicalFrictionIso(spike)
@@ -59,17 +59,18 @@ def test_reconstruct_published_merger_with_solver():
     this merger should be sped up by 48 days in 5 years. This used the old Coulomb logarithm.
     """
     binary = Binary(1.4e4, 1.4)
-    spike = StaticPowerLaw(binary, 7/3, rhosp = 226)
+    spike = StaticPowerLaw.from_binary(binary, gammasp = 7/3, rhosp = 226)
 
     gw = GravitationalWaves(binary)
     df = DynamicalFrictionIso(spike)
     df.b_eff = lambda r2, u, q: r2 *pc *(q)**(0.5) # For old Coulomb logarithm.
     
-    result = DynamicSolver(binary, loss = [gw, df]).solve(a0 = VacuumMerger(binary).r(5 *yr), h = 1e-2)
+    r5 = VacuumMerger(binary).r(5 *yr) # Starting distance [pc]
+    result = DynamicSolver(spike = spike, loss = [gw, df]).solve(a0 = r5, h = 1e-2)
     
     assert (5 *yr -result["t"][-1])/day == approx(48, rel = 1e-1)
 
-def test_df_merger_time_vs_solver(default_spike: StaticPowerLaw):    
+def test_df_merger_time_vs_solver(default_spike: StaticPowerLaw):
     spike = default_spike
     
     gw = GravitationalWaves(spike.binary)
@@ -83,8 +84,9 @@ def test_df_merger_time_vs_solver(default_spike: StaticPowerLaw):
     
     assert result["t"][-1] == approx(t_df_merger, rel = 1e-1)
 
-def test_zero_density_merger_time(default_binary: Binary):    
-    spike = StaticPowerLaw(default_binary, 7/3, rhosp = 0)
+def test_zero_density_merger_time(default_binary: Binary):
+    m1 = default_binary.m1; m2 = default_binary.m2
+    spike = StaticPowerLaw(m1 = m1, m2 = m2, gammasp = 7/3, rho6 = 0)
     
     gw = GravitationalWaves(spike.binary)
     df = DynamicalFrictionIso(spike)

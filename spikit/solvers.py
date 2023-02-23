@@ -1,5 +1,6 @@
 from spikit.binary import Binary
 from spikit.forces import GravitationalWaves, Force
+from spikit.spike import Spike, StaticPowerLaw
 
 from typing import Union
 import numpy as np
@@ -7,12 +8,23 @@ import numpy as np
 class DynamicSolver():
     """ The solver class that utilizes a dynamic time step to solve the binary evolution problem."""
     
-    def __init__(self, binary: Binary, losses: Union[GravitationalWaves, Force, list]) -> None:
-        # A list of all the forces that are active.
-        self.losses = losses if type(losses) is list else [losses] 
-        self.binary = binary
+    def __init__(self, binary: Binary = None, spike: Spike = None, loss: Union[GravitationalWaves, Force, list] = [], feedback: Union[GravitationalWaves, Force, list] = []) -> None:
         
-        pass
+        # A list of all the forces and feedback mechanisms that are active.
+        self.loss = loss if type(loss) is list else [loss]
+        self.feedback = feedback if type(feedback) is list else [feedback]
+        
+        if len(self.loss) == 0:
+            raise ValueError("At least one loss mechanism must be given.")
+        
+        if spike == None and len(self.feedback) > 0:
+            raise ValueError("Feedback mechanisms are only supported for spike models.")
+        
+        if (binary is not None and spike is not None) or (binary is None and spike is None):
+            raise ValueError("Exactly one of binary or spike must be given.")
+        
+        self.binary = binary or spike.binary
+        self.spike = spike or StaticPowerLaw.from_binary(binary, 7/3, 1) # If no spike is given, use a near zero-density power law spike as placeholder.
     
     def _integrate_order_2(self, parameters: dict, h: float) -> tuple:
         """ A modified, second order method for solving the static problem."""
