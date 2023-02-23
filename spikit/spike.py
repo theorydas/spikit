@@ -9,14 +9,26 @@ import numpy as np
 N_GRID = 100_000 # The number of grid points used in the distribution function.
 
 class Spike(ABC):
-    """ The default spike class. """
-    def __init__(self, binary: Binary = None) -> None:
-        self.binary = binary
+    """ The base class for all spikes. It is an abstract class that handles their distribution functions. """
+  
+    def __init__(self, m1: float, m2: float = 0) -> None:
+        self.binary = Binary(m1, m2)
+        self.eps = 0
+        self.f_eps = 0
     
-    def Psi(self, r):
+    def Psi(self, r: float) -> float:
+        """ The gravitational potential [J] that is bounding the spike. """
         pass
     
     def fv(self, v: float, r: float) -> float:
+        """ The 1D-velocity distribution [s/m] of the spike at a given distance [pc].
+        This is obtained from the distribution function, and is used to calculate the velocity moments.
+        
+        Parameters
+        ----------
+            v: float, The velocity magnitude [m/s] of the particle.
+            r: float, The distance [pc] from the centre of the spike where the distribution is evaluated.
+        """
         rho = self.rho(r) * Mo/pc**3 # [Kg/m3]
         
         feps = np.interp(self.Psi(r) -v**2/2, self.eps, self.f_eps)
@@ -25,7 +37,19 @@ class Spike(ABC):
         return fv
     
     def rho(self, r: float, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
-            return 0
+        """ The density [Msun/pc3] of the spike at a given distance [pc] from the centre, and within a given velocity range.
+        The range can be specified by the ratio of the velocity to the maximum velocity of the spike, chi.
+        Alternatively, the range can be specified by the velocity itself.
+        
+        Parameters
+        ----------
+            r: float, The distance [pc] from the centre of the spike where the density is evaluated.
+            v_lower: float = 0, The upper velocity [m/s] limit.
+            v_upper: float = None, The lower velocity [m/s] limit.
+            chi_lower: float = 0, The ratio of the upper velocity limit to the maximum velocity of the spike.
+            chi_upper: float = 1, The ratio of the lower velocity limit to the maximum velocity of the spike.
+        """
+        if r <= 0: warn("Distance must be positive. Returning 0."); return 0
         
         Vmax = self.binary.Vmax(r) # [m/s]
         if chi_lower < 0 or v_lower < 0:
@@ -52,9 +76,26 @@ class Spike(ABC):
         
         feps = np.interp(eps, self.eps, self.f_eps)
         
-        return 4 *np.pi *np.trapz(feps *v, eps) /(Mo/pc**3) # [Mo/pc3]
+        return 4 *np.pi *np.trapz(feps *v, eps) /(Mo/pc**3) # [Msun/pc3]
 
     def v_moment(self, r: float, k: float = 0, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
+        """ The k-th 1D-velocity moment of the particle distribution for particles within a velocity range.
+        For example, for k = 0, the default calculation should give the distribution's normalization (about 1),
+        while for k = 1, it is the average velocity of all particles.
+        The range can be specified by the ratio of the velocity to the maximum velocity of the spike, chi.
+        Alternatively, the range can be specified by the velocity itself.
+        
+        Parameters
+        ----------
+            r: float, The distance [pc] from the centre of the spike where the density is evaluated.
+            k: float, The index k of the velocity moment.
+            v_lower: float = 0, The upper velocity [m/s] limit.
+            v_upper: float = None, The lower velocity [m/s] limit.
+            chi_lower: float = 0, The ratio of the upper velocity limit to the maximum velocity of the spike.
+            chi_upper: float = 1, The ratio of the lower velocity limit to the maximum velocity of the spike.
+        """
+        if r <= 0: warn("Distance must be positive. Returning 0."); return 0
+        
         Vmax = self.binary.Vmax(r) # [m/s]
         if chi_lower < 0 or v_lower < 0:
             chi_lower = 0; v_lower = 0
@@ -80,27 +121,36 @@ class Spike(ABC):
         
         return np.trapz(fv *v**k, v)
     
-    def DoS(self, eps: float) -> float:
-        """ The density of states that describes particles in the spike. """
+    def DoS(self, eps: float = None) -> float:
+        """ The density of states (DoS) [m4/s] describing a particle with specific energy eps [m2/s2] in the spike.
+        When no eps is given, it uses the spike's eps grid instead.
+        
+        Parameters
+        ----------
+            eps: float = self.eps, The specific energy [m2/s2] of the particles in the dark matter spike.
+        """
+        if eps is None: eps = self.eps # [m2/s2]
         
         m1 = self.binary.m1
-        return np.sqrt(2) *(np.pi *G *m1 *Mo)**3 *self.eps**(-5/2)
-        
+        return np.sqrt(2) *(np.pi *G *m1 *Mo)**3 *eps**(-5/2)
 
 class PowerLaw(Spike):
-    """ The default power-law spike. """
+    """ A spike with a PowerLaw density distribution around a binary system with index gammasp, and normalization rho6 [Msun/pc3] at 1e-6 [pc].
+    Alternatively to rho6, it can be initialized using the the density rhosp [Msun/pc3] at its size.
+    """
     
-    def __init__(self, binary: Binary = None, gammasp: float = 7/3, rho6: float = 0, rhosp: float = 0):
-        super().__init__(binary)
+    def __init__(self, m1: float, m2: float = 0, gammasp: float = 7/3, rho6: float = 0, rhosp: float = 0):
+        super().__init__(m1, m2)
         
         self.gammasp = gammasp # Power-law index of the spike.
         self.rho6 = rho6
         self.rhosp = rhosp
+        self.binary = Binary(m1, m2)
         
         if rho6 != 0 and rhosp == 0:
-            self.rhosp = self.rho_other(rho6 = rho6, gammasp = gammasp, m1 = binary.m1)
+            self.rhosp = self.rho_other(rho6 = rho6, gammasp = gammasp, m1 = self.binary.m1)
         elif rhosp != 0 and rho6 == 0:
-            self.rho6 = self.rho_other(rhosp = rhosp, gammasp = gammasp, m1 = binary.m1)
+            self.rho6 = self.rho_other(rhosp = rhosp, gammasp = gammasp, m1 = self.binary.m1)
         elif rho6 == 0 and rhosp == 0:
             warn("No spike density given, results MAY converge to vacuum case.")
         elif rho6 != 0 and rhosp != 0:
@@ -114,13 +164,14 @@ class PowerLaw(Spike):
         self.f_eps = self.feps_init(self.eps) # The distribution function.
     
     def rsp(self, gammasp: float = None, m1: float = None, rhosp: float = None, rho6: float = None) -> float:
-        """ The spike's size [pc].
+        """ The spike's size [pc]. This calculation is based off of Equation 2.2 from arxiv.org/abs/2002.12811.
         
-        * gammasp is the slope of the power law.
-        * m1 is the mass [M_sun] of the larger component in the binary.
-        * rhosp [Mo/pc3] is the normalisation density of the spike.
-
-        The calculations are based on Equation 2.2 of arxiv.org/abs/2002.12811.
+        Parameters
+        ----------
+            gammasp: float = None, The spike's density index. If not given, defaults to the object's.
+            m1: float = None, The mass of the central black hole. If not given, defaults to the object's.
+            rhosp: float = None, The density normalization at the spike's size. If not given, defaults to the object's.
+            rho6: float = None, The density normalization at 1e-6 [pc]. If not given, defaults to the object's.
         """
         
         if gammasp is None: gammasp = self.gammasp
@@ -137,11 +188,14 @@ class PowerLaw(Spike):
         return ((3 -gammasp) *(m1 *Mo)/(2 *np.pi *(rhosp *Mo/pc**3) *5**(3 -gammasp)))**(1/3) /pc
     
     def rho_other(self, rho6: float = 0, rhosp: float = 0, gammasp: float = None, m1: float = None) -> float:
-        """ A conversion between the spike density normalisation rhosp [M_sun/pc3] and rho6 [M_sun/pc3].
-
-        * rhosp/(rho6) is the density normalisation of the spike/(at distance r6 = 1e-6 pc).
-        * gammasp is the slope of the density distribution.
-        * m1 is the mass [M_sun] of the central black hole in the binary system.
+        """ Converts one normalization constants (rho6/rhosp) [Msun/pc3] to the other.
+        
+        Parameters
+        ----------
+            rho6: float = None, The density normalization at 1e-6 [pc]. If not given, defaults to the object's.
+            rhosp: float = None, The density normalization at the spike's size. If not given, defaults to the object's.
+            gammasp: float = None, The spike's density index. If not given, defaults to the object's.
+            m1: float = None, The mass of the central black hole. If not given, defaults to the object's.
         """
         
         if rho6 != 0 and rhosp != 0:
@@ -165,33 +219,57 @@ class PowerLaw(Spike):
             return rhosp
     
     def rho_init(self, r: float) -> float:
+        """ The initial, total particle density [Msun/pc3] of the power-law profile.
+        
+        Parameters
+        ----------
+            r: float, The distance from the center of the spike where the density is evaluated.
+        """
+        
         return self.rho6 *(r/1e-6)**-self.gammasp # [Msun/pc3]
     
     def feps_init(self, eps: float) -> float:
+        """ The initial distribution function of the power-law profile.
+        
+        Parameters
+        ----------
+            eps: float = self.eps, The specific energy [m2/s2] of the particles in the dark matter spike.
+        """
         r6 = 1e-6 *pc # [m]
         rho6 = self.rho6 *Mo/pc**3 # [kg/m3]
         gammasp = self.gammasp
-        m1 = self.binary.m1
+        m1 = self.binary.m1 # [Msun]
         
         N = rho6 *r6**(gammasp) *gamma(gammasp +1)/gamma(gammasp -1/2) *(G *m1 *Mo)**(-gammasp) /np.sqrt(2 *np.pi)**3
         
         return N *eps**(gammasp -3/2)
     
     def fv_init(self, v: float, r: float) -> float:
-        Vmax = self.binary.Vmax(r)
+        """ The initial 1D-velocity distribution [s/m] of the spike at a given distance [pc].
+        
+        Parameters
+        ----------
+            v: float, The velocity magnitude [m/s] of the particle.
+            r: float, The distance [pc] from the centre of the spike where the distribution is evaluated.
+        """
+        Vmax = self.binary.Vmax(r) # [m/s]
         
         Av = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
         
         return Av *(1 -v**2/Vmax**2)**(self.gammasp -3/2) *v**2/Vmax**3 # [s/m]
     
     def f_break_static(self, m1: float = None, m2: float = None, gammasp: float = None, rhosp: float = None, rho6: float = None) -> float:
-        """ Returns the break frequency [Hz] as defined by the matching of the gravitational
-        and dynamic friction energy losses of a static power law dark matter spike in Equation 15
-        of arxiv.org/pdf/2108.04154.pdf.
-
-        * m1, m2 are the masses [M_sun] of the two components.
-        * gammasp is the slope of the dark matter distribution.
-        * rhosp is the density [M_sun/pc3] normalisation of the spike.
+        """ The breaking frequency [Hz] where the gravitational wave energy losses are equal to those of dynamical friction.
+        This calculation is based off of Eq. 15 from arxiv.org/pdf/2108.04154.pdf.
+        Either rhosp or rho6 needs to be specified.
+        
+        Parameters
+        ----------
+            m1: float = None, The mass [Msun] of the seed.
+            m2: float = None, The mass [Msun] of the companion.
+            gammasp: float = None, The slope index of the density profile.
+            rhosp: float = None, The density [Msun/pc3] of the spike at its size.
+            rho6: float = None, The density [Msun/pc3] of the spike at 1e-6 [pc].
         """
         if gammasp is None: gammasp = self.gammasp
         if m1 is None: m1 = self.binary.m1
@@ -214,7 +292,25 @@ class PowerLaw(Spike):
         return fb # [Hz]
 
 class StaticPowerLaw(PowerLaw):
+    """ A spike with a PowerLaw density distribution around a binary system with index gammasp, and normalization rho6 [Msun/pc3] at 1e-6 [pc].
+    Alternatively to rho6, it can be initialized using the the density rhosp [Msun/pc3] at its size.
+    
+    This class utilizes analytical expressions based on the power-law distribution function and cannot be evolved, hence 'Static'.
+    """
+    
     def rho(self, r: float, v_lower: float = 0, v_upper: float = None, chi_lower: float = 0, chi_upper: float = 1) -> float:
+        """ The density [Msun/pc3] of the spike at a given distance [pc] from the centre, and within a given velocity range.
+        The range can be specified by the ratio of the velocity to the maximum velocity of the spike, chi.
+        Alternatively, the range can be specified by the velocity itself.
+        
+        Parameters
+        ----------
+            r: float, The distance [pc] from the centre of the spike where the density is evaluated.
+            v_lower: float = 0, The upper velocity [m/s] limit.
+            v_upper: float = None, The lower velocity [m/s] limit.
+            chi_lower: float = 0, The ratio of the upper velocity limit to the maximum velocity of the spike.
+            chi_upper: float = 1, The ratio of the lower velocity limit to the maximum velocity of the spike.
+        """
         if r <= 0: warn("Distance must be positive. Returning 0."); return 0
         
         Vmax = self.binary.Vmax(r) # [m/s]
@@ -243,26 +339,45 @@ class StaticPowerLaw(PowerLaw):
     
     @property
     def feps(self) -> float:
+        """ The distribution function of the power-law profile, given as its initial value. """
+        
         return self.feps_init(self.eps)
     
     def fv(self, v: float, r: float) -> float:
+        """ The 1D-velocity distribution [s/m] of the spike at a given distance [pc], given as its initial value.
+        
+        Parameters
+        ----------
+            v: float, The velocity magnitude [m/s] of the particle.
+            r: float, The distance [pc] from the centre of the spike where the distribution is evaluated.
+        """
+        
         return self.fv_init(v, r)
     
     def xi_Nl(self, N: float, chi: float) -> float:
-        """ Returns the lower, normalized velocity moment (v/u)^N for particles with v < u.
+        """ The N-th velocity moment normalized by a cutoff velocity $u = chi V_{max}$, where $V_{max}$ is the escape velocity,
+        and for particles moving slower than that.
+        For example for N = 1, it is the average of $v/(u *V_{max})$.
         
-            chi is the ratio of the velocity u to the escape velocity.
-            N is the order of the velocity-moment.
+        Parameters
+        ----------
+            N: float, The index of the velocity moment.
+            chi: float, The ratio between the cutoff velocity and the escape velocity of the medium.
         """
+        
         A_v = 4/np.sqrt(np.pi) *gamma(self.gammasp +1)/gamma(self.gammasp -1/2)
         
         return A_v *chi**3 / (N +3) *hyp2f1(3/2 -self.gammasp, (N +3)/2, (N +5)/2, chi**2)
 
     def xi_Nu(self, N: float, chi: float) -> float:
-        """ Returns the upper, normalized velocity moment (v/u)^N for particles with v > u.
+        """ The N-th velocity moment normalized by a cutoff velocity $u = chi V_{max}$, where $V_{max}$ is the escape velocity,
+        and for particles moving faster than that.
+        For example for N = 1, it is the average of $v/(u *V_{max})$.
         
-            chi is the ratio of the velocity u to the escape velocity.
-            N is the order of the velocity-moment.
+        Parameters
+        ----------
+            N: float, The index of the velocity moment.
+            chi: float, The ratio between the cutoff velocity and the escape velocity of the medium.
         """
         
         return self.xi_Nl(N, 1) - self.xi_Nl(N, chi)
