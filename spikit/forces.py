@@ -46,7 +46,7 @@ class Accretion(Force):
         
         self._k = k # The ratio of the body's Swartzchild radius to its physical size.
     
-    def csection(self, u: float, m2: float = None) -> float:
+    def csection(self, u: float, r2: float = None, m2: float = None) -> float:
         """ Returns the cross-section [m^2] of the spike. """
         
         if m2 is None: m2 = self._binary.m2 # [Msun]
@@ -59,12 +59,12 @@ class Accretion(Force):
         else:
             return pi *rs**2 /self._k**2 *(1 +self._k/beta**2) *pc**2 # [m2]
     
-    def b_acc(self, u: float, m2: float = None) -> float:
+    def b_acc(self, u: float, r2: float = None, m2: float = None) -> float:
         """ Returns the impact parameter b [m] of the spike. """
         
         if m2 is None: m2 = self._binary.m2 # [Msun]
         
-        return (self.csection(u, m2)/pi)**(0.5)
+        return (self.csection(u, r2, m2)/pi)**(0.5)
     
     # ====================
     def dm2_dt(self, r2: float, u: float, m2: float = None) -> float:
@@ -74,7 +74,7 @@ class Accretion(Force):
         
         rho_DM = self._spike.rho(r2)/pc**3 # [Msun/m3]
 
-        return rho_DM *Accretion.csection(self, u, m2) *u # [Msun/s]
+        return rho_DM *Accretion.csection(self, u, r2, m2) *u # [Msun/s]
     
     def F(self, r2: float, u: float, m1: float = None, m2: float = None) -> float:
         """ Returns the accretion darg-force [N] due to a 'frozen' spike. """

@@ -47,15 +47,15 @@ def test_stuck_acrretion_depletion_blueprint(default_binary: Binary, default_spi
     u = default_binary.u2(r2) # [m/s]
     
     acc = Accretion(default_spike)
-    acc.csection = lambda u: 1e16 # [m2]
+    acc.csection = lambda u, r2: 1e16 # [m2]
     dfacc = AccretionDepletion(acc)
     blueprint = StuckAccretionDepletedPowerLaw(acc)
     
     t = 0
     for i in range(100):
         dt = 5 *T/100
-        dfacc.dfeps_dt(r2, u)
-        default_spike.f_eps += dfacc.dfeps_dt(r2, u) *dt
+        dfacc.dfeps_dt(r2)
+        default_spike.f_eps += dfacc.dfeps_dt(r2) *dt
         t += dt
     
-    assert max(abs(default_spike.f_eps/blueprint.feps(r2, t) -1)) <= 1e-2
+    assert max(abs(default_spike.f_eps/blueprint.feps(r2, t = t) -1)) <= 1e-2

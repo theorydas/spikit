@@ -126,7 +126,8 @@ class StuckAccretionDepletedPowerLaw(StaticPowerLaw):
         r6 = 1e-6 # [pc]
         
         m1 = self._binary.m1 # [Msun]
-        bacc = self.force.b_acc(self._binary.u2(r2)) /pc # [pc]
+        u = self._binary.u2(r2) # [m/s]
+        bacc = self.force.b_acc(u, r2) /pc # [pc]
         T = self._binary.T(r2) # [s]
         
         # A constant that is used in the integral.
@@ -161,12 +162,11 @@ class StuckAccretionDepletedPowerLaw(StaticPowerLaw):
         
         return self._spike.rho_init(r) +A *summation
     
-    def feps(self, r2: float, t: float) -> float:
+    def feps(self, a: float, e: float = 0, t: float = 0) -> float:
         """ Returns the distribution function of the spike at a given radius and time. """
         
-        u = self._binary.u2(r2) # [m/s]
-        T = self._binary.T(r2) # [s]
+        T = self._binary.T(a) # [s]
         
-        Pacc = AccretionDepletion(self.force).Pacc(r2, u)
+        Pacc = AccretionDepletion(self.force).Pacc(a, e)
         
-        return self._spike.feps * np.exp( -Pacc *t/T)
+        return self._spike.f_eps * np.exp( -Pacc *t/T)
