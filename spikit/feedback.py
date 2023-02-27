@@ -26,13 +26,26 @@ class AccretionDepletion(Feedback):
         r2 = self.binary.r2(a, e, theta) # [pc]
         u = self.binary.u2(r2, a) # [m/s]
         
+        Ep = self.spike.eps/self.binary.M1.Psi(r2)
+        X = self.force.b_acc(u, r2)/(r2 *pc)
+        
         if order == 1:
             csection = self.force.csection(u, r2) # [m2]
             vE = np.sqrt(2 *(self.binary.M1.Psi(r2) -self.spike.eps) ) # [m/s]
             
             gacc = 4 *pi *vE *(r2 *pc) *csection
-        elif order == 2: # A more accurate approximation
-            gacc = 1
+        elif order == 2: # A more accurate approximation            
+            getIntegrant_ = lambda alpha: 2*(35*Ep*(1 - Ep)**(5/2) + 35*Ep*(Ep - 1)*(-Ep + X*np.cos(alpha) + 1)**(3/2) + 21*(1 - 2*Ep)*(1 - Ep)**(5/2) - 15*(1 - Ep)**(7/2) + (42*Ep - 21)*(-Ep + X*np.cos(alpha) + 1)**(5/2) + 15*(-Ep + X*np.cos(alpha) + 1)**(7/2))/(105*np.cos(alpha)**2)
+            
+            alphas = np.linspace(0, np.pi, 50)            
+            
+            integrand = []
+            for alpha_ in alphas:
+                integrand_ = getIntegrant_(alpha_)
+                integrand_[1 +X *np.cos(alpha_) -Ep < 0] = 0 # We remove points outside the domain.
+                integrand.append(integrand_)
+            
+            gacc = 2 *4 *np.pi *(r2 *pc)**3 *np.sqrt(2 *self.binary.M1.Psi(r2)) *np.trapz(integrand, alphas, axis = 0)
         
         return np.nan_to_num(gacc)
         
