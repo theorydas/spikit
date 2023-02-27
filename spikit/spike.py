@@ -6,7 +6,7 @@ from warnings import warn
 from abc import ABC
 import numpy as np
 
-N_GRID = 100_000 # The number of grid points used in the distribution function.
+N_GRID = 10_000 # The number of grid points used in the distribution function.
 
 class Spike(ABC):
     """ The base class for all spikes. It is an abstract class that handles their distribution functions. """
