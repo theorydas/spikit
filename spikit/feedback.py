@@ -1,29 +1,40 @@
 from abc import ABC
 import numpy as np
 
-from spikit.forces import Accretion
+from spikit.forces import Accretion, Force
 from spikit.units import pc, pi
 
 from scipy.special import ellipeinc, ellipkinc
 
 class Feedback(ABC):
-    def __init__(self, accretion_force: Accretion) -> None:
-        self.force = accretion_force
-        self.spike = accretion_force._spike
-        self.binary = accretion_force._binary
+    """ A class that describes feedback from the companion onto the spike. """
+    
+    def __init__(self, force: Force) -> None:
+        self.force = force
+        self.spike = force._spike
+        self.binary = force._binary
 
+class AccretionDepletion(Feedback):
+    """ The depletion of the spike due to particle accretion on the companion."""
+    def __init__(self, accretion_force: Accretion) -> None:
+        super().__init__(accretion_force)
+        
         self.ellipeinc = np.vectorize(self.ellipeinc)
         self.ellipkinc = np.vectorize(self.ellipkinc)
         
         self.I1 = lambda u, alpha: 2 *np.sqrt(1 +u) *self.ellipeinc(alpha/2, 2 *u/(1+u))
         self.I2 = lambda u, alpha: 2/3/u*( (u-1)*np.sqrt(1+u) *self.ellipkinc(alpha/2, 2*u/(1+u)) +u*np.sin(alpha) *np.sqrt(1+u*np.cos(alpha)) +np.sqrt(1+u) *self.ellipeinc(alpha/2, 2*u/(1+u)) )
-        
-    def dfeps_dt():
-        pass
-
-class AccretionDepletion(Feedback):
+    
     def dfeps_dt(self, a: float, e: float = 0, N: int = 50, order: int = 1) -> float:
+        """ The time derivative of the distribution function due to particle accretion on the companion.
         
+        Parameters
+        ----------
+            a: float, The semi-major axis [pc] of the orbit.
+            e: float = 0, The eccentricity of the elliptic orbit.
+            N: float = 50, The number of points to use in the integration around the orbit.
+            order: int, The order of the approximation. 1 is the fastest, while 2 and 3 are different implementations of a more accurate approximation.
+        """
         if order not in [1, 2, 3]: raise ValueError("Order must be 1, 2 or 3")
         if N <= 0: raise ValueError("N must be positive")
         if e < 0 or e >= 1: raise ValueError("The eccentricity must be in the range [0, 1)")
@@ -31,6 +42,15 @@ class AccretionDepletion(Feedback):
         return -self.spike.f_eps *self.Pacc(a, e, N, order) /self.binary.T(a)
     
     def dgacc_dtheta(self, a: float, e: float = 0, theta: float = 0, order: int = 1) -> float:
+        """ The density of states that describes particles in the spike which are accreted onto the companion.
+        
+        Parameters
+        ----------
+            a: float, The semi-major axis [pc] of the orbit.
+            e: float = 0, The eccentricity of the elliptic orbit.
+            N: float = 50, The number of points to use in the integration around the orbit.
+            order: int, The order of the approximation. 1 is the fastest, while 2 and 3 are different implementations of a more accurate approximation.
+        """
         r2 = self.binary.r2(a, e, theta) # [pc]
         u = self.binary.u2(r2, a) # [m/s]
         
@@ -69,7 +89,15 @@ class AccretionDepletion(Feedback):
         return np.nan_to_num(gacc)
         
     def Pacc(self, a: float, e: float = 0, N: int = 50, order: int = 1) -> float:
-        """ The accretion probability """
+        """ The probability that particles in the spike are accreted onto the companion.
+        
+        Parameters
+        ----------
+            a: float, The semi-major axis [pc] of the orbit.
+            e: float = 0, The eccentricity of the elliptic orbit.
+            N: float = 50, The number of points to use in the integration around the orbit.
+            order: int, The order of the approximation. 1 is the fastest, while 2 and 3 are different implementations of a more accurate approximation.
+        """
         
         if order not in [1, 2, 3]: raise ValueError("Order must be 1, 2 or 3")
         if N <= 0: raise ValueError("N must be positive")
@@ -88,18 +116,32 @@ class AccretionDepletion(Feedback):
         
         return np.nan_to_num(gacc/g)
     
-    def ellipeinc(self, x, m):
+    def ellipkinc(self, x: float, m: float) -> float:
+        """ An extension for the incomplete elliptic integral of the first kind that is also valid for m > 1.
+        
+        Parameters
+        ----------
+            x: float, The amplitude of the elliptic integral.
+            m: float, The parameter of the elliptic integral, m = k^2.
+        """
+        if m <= 1:
+            return ellipkinc(x, m)
+        else: # Extend domain with Reciprocal modulus transformations.
+            sinb = np.clip(np.sqrt(m) *np.sin(x), -1, 1)
+            b = np.arcsin(sinb)
+            return 1/np.sqrt(m) *ellipkinc(b, 1/m)
+    
+    def ellipeinc(self, x: float, m: float) -> float:
+        """ An extension for the incomplete elliptic integral of the second kind that is also valid for m > 1.
+        
+        Parameters
+        ----------
+            x: float, The amplitude of the elliptic integral.
+            m: float, The parameter of the elliptic integral, m = k^2.
+        """
         if m <= 1:
             return ellipeinc(x, m)
         else: # Extend domain with Reciprocal modulus transformations.
             sinb = np.clip(np.sqrt(m) *np.sin(x), -1, 1)
             b = np.arcsin(sinb)
             return np.sqrt(m) *ellipeinc(b, 1/m) + (1 -m)/np.sqrt(m) *ellipkinc(b, 1/m)
-
-    def ellipkinc(self, x, m):
-        if m < 1:
-            return ellipkinc(x, m)
-        else: # Extend domain with Reciprocal modulus transformations.
-            sinb = np.clip(np.sqrt(m) *np.sin(x), -1, 1)
-            b = np.arcsin(sinb)
-            return 1/np.sqrt(m) *ellipkinc(b, 1/m)
