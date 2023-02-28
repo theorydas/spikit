@@ -47,7 +47,7 @@ def test_stuck_acrretion_depletion_blueprint(default_binary: Binary, default_spi
     u = default_binary.u2(r2) # [m/s]
     
     acc = Accretion(default_spike)
-    acc.csection = lambda u, r2: 1e16 # [m2]
+    acc.csection = lambda u, r2, m2 = None: 1e16 # [m2]
     dfacc = AccretionDepletion(acc)
     blueprint = StuckAccretionDepletedPowerLaw(acc)
     
