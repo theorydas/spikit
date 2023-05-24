@@ -6,7 +6,7 @@ from warnings import warn
 from abc import ABC
 import numpy as np
 
-N_GRID = 10_000 # The number of grid points used in the distribution function.
+N_GRID = 1_000 # The number of grid points used in the distribution function.
 
 class Spike(ABC):
     """ The base class for all spikes. It is an abstract class that handles their distribution functions. """
@@ -132,7 +132,27 @@ class Spike(ABC):
         if eps is None: eps = self.eps # [m2/s2]
         
         m1 = self.binary.m1
-        return np.sqrt(2) *(np.pi *G *m1 *Mo)**3 *eps**(-5/2)
+    def v(self, eps: float, r: float, PN: int = 0) -> float:
+        """ The velocity [m/s] of a particle with specific energy eps [m2/s2] at distance r [pc] from the centre of the spike.
+        
+        Parameters
+        ----------
+            eps: float, The specific energy [m2/s2] of the particles in the dark matter spike.
+            r: float, The distance [pc] from the centre of the spike where the velocity is evaluated.
+            PN: int = 0, The post-Newtonian order to which the velocity is calculated.
+        """
+        
+        if PN not in [0, 1]: raise ValueError("PN order must be 0 or 1.")
+        
+        P = self.Psi(r) # [m2/s2]
+        
+        if PN == 0:
+            v2 = 2 *(P - eps) # [m2/s2]
+        elif PN == 1:
+            v2 = 2/3 *c *np.sqrt(c**2 +9*P -6 *eps -3/4 *P**2/c**2) -2/3 *c**2 *(1 +3/2 *P/c**2)
+        
+        return np.sqrt(v2) # [m/s]
+        
 
 class PowerLaw(Spike):
     """ A spike with a PowerLaw density distribution around a binary system with index gammasp, and normalization rho6 [Msun/pc3] at 1e-6 [pc].
@@ -160,7 +180,7 @@ class PowerLaw(Spike):
         self.r_min = self.binary.M1.Rs
         self.r_max = self.rsp()
         
-        self.eps = self.Psi(np.logspace(np.log10(self.r_max), np.log10(self.r_min), N_GRID)) # The energy grid.
+        self.eps = self.Psi(np.logspace(np.log10(self.r_max), np.log10(self.r_min *1.001), N_GRID)) # The energy grid.
         self.f_eps = self.feps_init(self.eps) # The distribution function.
     
     @classmethod
