@@ -97,7 +97,7 @@ class DynamicalFriction(Force):
     def b_eff(self, r2: float, u: float, q: float = None) -> float:
         """ Returns the maximum impact parameter [m] for which dynamical friction is effective. """
         
-        if q == None: q = self._binary.q
+        if q == None: q = self._binary.q()
         
         return self._binary.rhill(r2, q) *pc # [m]
     
