@@ -6,13 +6,15 @@ from spikit.units import pc, pi
 
 from scipy.special import ellipeinc, ellipkinc
 
+from dataclasses import dataclass
+@dataclass
 class Feedback(ABC):
     """ A class that describes feedback from the companion onto the spike. """
     
-    def __init__(self, force: Force) -> None:
-        self.force = force
-        self.spike = force._spike
-        self.binary = force._binary
+    force: Force
+    def __post_init__(self) -> None:
+        self.spike = self.force._spike
+        self.binary = self.force._binary
 
 class AccretionDepletion(Feedback):
     """ The depletion of the spike due to particle accretion on the companion."""

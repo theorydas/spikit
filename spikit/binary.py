@@ -1,15 +1,15 @@
 from spikit.units import *
 from numpy import sqrt, cos, sin, linspace
+from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 
 # ============================
 # ======== Black Hole ========
+@dataclass
 class BlackHole:
     """ A black hole with mass m [Msun]. """
-    
-    def __init__(self, m: float):
-        self.m = m # [Msun]
+    m: float # [Msun]
     
     @property
     def Rm(self) -> float:
@@ -52,15 +52,16 @@ class BlackHole:
 
 # ========================
 # ======== Binary ========
+
+@dataclass
 class Binary:
     """ A binary composed of a large, central black hole with mass m1 [Msun], and an orbiting companion with m2 [Msun]. """
     
-    def __init__(self, m1: float, m2: float):
-        
-        if m1 < m2: raise ValueError("m1 must be greater than m2.")
-        
-        self.m1 = m1 # [Msun] Central black hole.
-        self.m2 = m2 # [Msun] Companion.
+    m1: float # [Msun] Central black hole.
+    m2: float # [Msun] Companion.
+    
+    def __post_init__(self):
+        if self.m1 < self.m2: raise ValueError("m1 must be greater than m2.")
     
     @property
     def M1(self) -> BlackHole:
