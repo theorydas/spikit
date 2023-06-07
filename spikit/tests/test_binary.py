@@ -79,3 +79,15 @@ def test_vis_visa_velocity(default_binary: Binary):
     q = system.q()
     
     assert u/u2 == approx(1 +q)
+
+def test_bhole_equality():
+    bh1 = BlackHole(10)
+    bh2 = BlackHole(10)
+    
+    assert bh1 == bh2
+
+def test_binary_equality():
+    system1 = Binary(10, 5)
+    system2 = Binary(10, 5)
+    
+    assert system1 == system2
